@@ -1,0 +1,87 @@
+datasource db {
+    // Change provider to whichever provide you're using.
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
+}
+
+generator client {
+    provider = "prisma-client-js"
+}
+
+enum CommandType {
+    TEXT_COMMAND
+    APPLICATION_COMMAND
+}
+
+enum InfrastructureUsed {
+    SERVERLESS
+    ENDPOINT
+}
+
+model Cooldown {
+    userId      String
+    commandName String
+
+    expiresAt DateTime
+
+    commandType CommandType
+
+    @@id([commandName, commandType, userId])
+    @@map("command_cooldowns")
+}
+
+model UserLanguage {
+    userId     String @id
+    languageId String
+
+    @@map("user_languages")
+}
+
+model Transcription {
+    initialMessageId  String  @id
+    responseMessageId String
+    threadId          String?
+
+    @@map("transcriptions")
+}
+
+model AutoTranscriptVoiceMessages {
+    guildId String @id
+
+    @@map("auto_transcript_voice_messages")
+}
+
+model Job {
+    id                 String             @id
+    initialMessageId   String
+    responseMessageId  String
+    guildId            String
+    infrastructureUsed InfrastructureUsed
+    channelId          String
+    interactionId      String?
+    interactionToken   String?
+
+    @@map("jobs")
+}
+
+model PremiumGuild {
+    guildId     String      @id
+    purchaserId String
+    purchaser   PremiumUser @relation(fields: [purchaserId], references: [userId])
+
+    @@map("premium_guilds")
+}
+
+model PremiumUser {
+    userId        String         @id
+    premiumGuilds PremiumGuild[]
+    expiresAt     DateTime
+
+    @@map("premium_users")
+}
+
+model IgnoredUser {
+    userId String @id
+
+    @@map("ignored_users")
+}
