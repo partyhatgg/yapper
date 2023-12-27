@@ -384,7 +384,7 @@ export default class Functions {
 						no_speech_threshold: 0.6,
 					},
 					enable_vad: false,
-					webhook: "https://macos.polar.blue/job_complete",
+					webhook: `${env.BASE_URL}/job_complete`,
 				}),
 				headers: {
 					"Content-Type": "application/json",
