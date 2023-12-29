@@ -60,9 +60,7 @@ export default {
 	intents:
 		GatewayIntentBits.Guilds |
 		GatewayIntentBits.GuildMessages |
-		GatewayIntentBits.GuildPresences |
 		GatewayIntentBits.MessageContent |
-		GatewayIntentBits.GuildVoiceStates |
 		GatewayIntentBits.GuildMembers,
 
 	/**
