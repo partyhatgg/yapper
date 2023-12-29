@@ -4,6 +4,7 @@ import { InfrastructureUsed } from "@prisma/client";
 import ApplicationCommand from "../../../../lib/classes/ApplicationCommand.js";
 import type Language from "../../../../lib/classes/Language.js";
 import type ExtendedClient from "../../../../lib/extensions/ExtendedClient.js";
+import Functions from "../../../../lib/utilities/functions.js";
 import type { APIInteractionWithArguments } from "../../../../typings/index.js";
 
 export default class TranscribeContextMenu extends ApplicationCommand {
@@ -45,7 +46,7 @@ export default class TranscribeContextMenu extends ApplicationCommand {
 			include: { purchaser: true },
 		});
 
-		if (!premiumGuild || premiumGuild.purchaser.expiresAt.getTime() < Date.now())
+		if ((premiumGuild?.purchaser.expiresAt.getTime() ?? 0) < Date.now())
 			return [
 				false,
 				{
@@ -145,37 +146,25 @@ export default class TranscribeContextMenu extends ApplicationCommand {
 			});
 		}
 
-		const [endpointHealth] = await Promise.all([
-			this.client.functions.getEndpointHealth(),
-			this.client.api.interactions.reply(interaction.id, interaction.token, {
-				content: language.get("TRANSCRIBING"),
-				allowed_mentions: { parse: [] },
-			}),
-		]);
+		await this.client.api.interactions.reply(interaction.id, interaction.token, {
+			content: language.get("TRANSCRIBING"),
+			allowed_mentions: { parse: [] },
+		});
 
-		const infrastructure =
-			!endpointHealth.workers.running ||
-			endpointHealth.jobs.inProgress + endpointHealth.jobs.inQueue >= endpointHealth.workers.running
-				? "serverless"
-				: "endpoint";
+		const attachmentUrl = interaction.data.resolved.messages[interaction.data.target_id]!.attachments.find(
+			(attachment) => this.client.config.allowedFileTypes.includes(attachment.content_type ?? ""),
+		)!.url;
 
 		const [job, reply] = await Promise.all([
-			this.client.functions.transcribeAudio(
-				interaction.data.resolved.messages[interaction.data.target_id]!.attachments.find((attachment) =>
-					this.client.config.allowedFileTypes.includes(attachment.content_type ?? ""),
-				)!,
-				infrastructure,
-				"run",
-				"large-v2",
-			),
+			Functions.transcribeAudio(attachmentUrl, "endpoint", "run", "base"),
 			this.client.api.interactions.getOriginalReply(interaction.application_id, interaction.token),
 		]);
 
 		return this.client.prisma.job.create({
 			data: {
 				id: job.id,
-				infrastructureUsed:
-					infrastructure === "serverless" ? InfrastructureUsed.SERVERLESS : InfrastructureUsed.ENDPOINT,
+				infrastructureUsed: InfrastructureUsed.ENDPOINT,
+				attachmentUrl,
 				channelId: interaction.channel.id,
 				guildId: interaction.guild_id!,
 				interactionId: interaction.id,

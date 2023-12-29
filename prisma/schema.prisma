@@ -53,6 +53,7 @@ model AutoTranscriptVoiceMessages {
 
 model Job {
     id                 String             @id
+    attachmentUrl      String
     initialMessageId   String
     responseMessageId  String
     guildId            String

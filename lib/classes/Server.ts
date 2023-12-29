@@ -2,7 +2,7 @@ import { env, exit } from "node:process";
 import { setInterval } from "node:timers";
 import { API, ButtonStyle, ComponentType } from "@discordjs/core";
 import { REST } from "@discordjs/rest";
-import { PrismaClient } from "@prisma/client";
+import { InfrastructureUsed, PrismaClient } from "@prisma/client";
 import type { FastifyInstance } from "fastify";
 import { fastify } from "fastify";
 import type { RunPodRunSyncResponse } from "../../typings/index.js";
@@ -123,7 +123,7 @@ export default class Server {
 		});
 
 		setInterval(async () => {
-			const jobs = await this.prisma.job.findMany({ where: { infrastructureUsed: "ENDPOINT" } });
+			const jobs = await this.prisma.job.findMany({});
 
 			return Promise.all(
 				jobs
@@ -133,8 +133,10 @@ export default class Server {
 							job.infrastructureUsed.toLowerCase() as "endpoint" | "serverless",
 						);
 
+						if (!jobStatus) return this.prisma.job.delete({ where: { id: job.id } });
+
 						if (jobStatus.status === TranscriptionState.COMPLETED) {
-							return fetch(`http://127.0.0.1:${this.port}/job_complete`, {
+							return fetch(`http://127.0.0.1:${this.port}/job_complete?secret=${env.SECRET}`, {
 								method: "POST",
 								body: JSON.stringify(jobStatus),
 							});
@@ -156,13 +158,17 @@ export default class Server {
 		this.router.get("/", (_, response) => response.redirect("https://polar.blue"));
 
 		this.router.post("/job_complete", async (request, response) => {
-			const body: RunPodRunSyncResponse = request.body as RunPodRunSyncResponse;
+			// console.log(request);
+			const body: RunPodRunSyncResponse = typeof request.body === "string" ? JSON.parse(request.body) : request.body;
 
 			const job = await this.prisma.job.findUnique({ where: { id: body.id } });
 
 			if (!job) return response.status(400).send({ message: "Job not found." });
 
-			await this.prisma.job.delete({ where: { id: job.id } });
+			const [premiumGuild] = await Promise.all([
+				this.prisma.premiumGuild.findUnique({ where: { guildId: job.guildId }, include: { purchaser: true } }),
+				this.prisma.job.delete({ where: { id: job.id } }),
+			]);
 
 			if (body.output.transcription.length > 2_000) {
 				const message = job.interactionId
@@ -216,7 +222,13 @@ export default class Server {
 					await this.discordApi.channels.createMessage(thread.id, {
 						content:
 							index === splitTranscription.length - 1 || splitTranscription[index]?.endsWith(" ")
-								? splitTranscription[index]
+								? `${splitTranscription[index]}${
+										index === splitTranscription.length - 1 &&
+										body.output.model === "base" &&
+										(premiumGuild?.purchaser.expiresAt.getTime() ?? 0) > Date.now()
+											? "\n\n⚡ A higher quality message is currently being transcribed."
+											: ""
+								  }`
 								: `${splitTranscription[index]}—`,
 						allowed_mentions: { parse: [] },
 						components:
@@ -238,53 +250,130 @@ export default class Server {
 					});
 				}
 
-				await Promise.all([
-					this.prisma.transcription.create({
-						data: {
-							initialMessageId: job.initialMessageId,
-							responseMessageId: job.responseMessageId,
-							threadId: thread.id,
-						},
-					}),
-					this.discordApi.channels.edit(thread.id, {
-						locked: true,
-						archived: true,
-					}),
-				]);
+				if (body.output.model === "base" && (premiumGuild?.purchaser.expiresAt.getTime() ?? 0) > Date.now()) {
+					const newJob = await Functions.transcribeAudio(job.attachmentUrl, "serverless", "run", "large-v2");
+
+					await Promise.all([
+						this.prisma.transcription.upsert({
+							where: { initialMessageId: job.initialMessageId },
+							create: {
+								initialMessageId: job.initialMessageId,
+								responseMessageId: job.responseMessageId,
+								threadId: thread.id,
+							},
+							update: {
+								threadId: thread.id,
+							},
+						}),
+						this.discordApi.channels.edit(thread.id, {
+							locked: true,
+							archived: true,
+						}),
+						this.prisma.job.create({
+							data: {
+								...job,
+								id: newJob.id,
+								infrastructureUsed: InfrastructureUsed.SERVERLESS,
+							},
+						}),
+					]);
+				} else
+					await Promise.all([
+						this.prisma.transcription.upsert({
+							where: { initialMessageId: job.initialMessageId },
+							create: {
+								initialMessageId: job.initialMessageId,
+								responseMessageId: job.responseMessageId,
+								threadId: thread.id,
+							},
+							update: {
+								threadId: thread.id,
+							},
+						}),
+						this.discordApi.channels.edit(thread.id, {
+							locked: true,
+							archived: true,
+						}),
+					]);
 
 				return response.status(200);
 			}
 
-			await Promise.all([
-				this.prisma.transcription.create({
-					data: {
-						initialMessageId: job.initialMessageId,
-						responseMessageId: job.responseMessageId,
-					},
-				}),
-				job.interactionId
-					? this.discordApi.interactions.editReply(env.APPLICATION_ID, job.interactionToken!, {
-							content: body.output.transcription,
-							allowed_mentions: { parse: [] },
-							components: [
-								{
-									components: [
-										{
-											type: ComponentType.Button,
-											style: ButtonStyle.Link,
-											url: `https://discord.com/channels/${job.guildId}/${job.channelId}/${job.initialMessageId}`,
-											label: "Transcribed Message",
-										},
-									],
-									type: ComponentType.ActionRow,
-								},
-							],
-					  })
-					: this.discordApi.channels.editMessage(job.channelId!, job.initialMessageId, {
-							content: body.output.transcription,
-							allowed_mentions: { parse: [] },
-					  }),
-			]);
+			if (body.output.model === "base" && (premiumGuild?.purchaser.expiresAt.getTime() ?? 0) > Date.now()) {
+				const newJob = await Functions.transcribeAudio(job.attachmentUrl, "serverless", "run", "large-v2");
+
+				await Promise.all([
+					this.prisma.transcription.upsert({
+						where: { initialMessageId: job.initialMessageId },
+						create: {
+							initialMessageId: job.initialMessageId,
+							responseMessageId: job.responseMessageId,
+						},
+						update: {},
+					}),
+					job.interactionId
+						? this.discordApi.interactions.editReply(env.APPLICATION_ID, job.interactionToken!, {
+								content: `${body.output.transcription}\n\n⚡ A higher quality message is currently being transcribed.`,
+								allowed_mentions: { parse: [] },
+								components: [
+									{
+										components: [
+											{
+												type: ComponentType.Button,
+												style: ButtonStyle.Link,
+												url: `https://discord.com/channels/${job.guildId}/${job.channelId}/${job.initialMessageId}`,
+												label: "Transcribed Message",
+											},
+										],
+										type: ComponentType.ActionRow,
+									},
+								],
+						  })
+						: this.discordApi.channels.editMessage(job.channelId!, job.responseMessageId, {
+								content: `${body.output.transcription}\n\n⚡ A higher quality message is currently being transcribed.`,
+								allowed_mentions: { parse: [] },
+						  }),
+					this.prisma.job.create({
+						data: {
+							...job,
+							id: newJob.id,
+							infrastructureUsed: InfrastructureUsed.SERVERLESS,
+						},
+					}),
+				]);
+			} else
+				await Promise.all([
+					this.prisma.transcription.upsert({
+						where: { initialMessageId: job.initialMessageId },
+						create: {
+							initialMessageId: job.initialMessageId,
+							responseMessageId: job.responseMessageId,
+						},
+						update: {},
+					}),
+					job.interactionId
+						? this.discordApi.interactions.editReply(env.APPLICATION_ID, job.interactionToken!, {
+								content: body.output.transcription,
+								allowed_mentions: { parse: [] },
+								components: [
+									{
+										components: [
+											{
+												type: ComponentType.Button,
+												style: ButtonStyle.Link,
+												url: `https://discord.com/channels/${job.guildId}/${job.channelId}/${job.initialMessageId}`,
+												label: "Transcribed Message",
+											},
+										],
+										type: ComponentType.ActionRow,
+									},
+								],
+						  })
+						: this.discordApi.channels.editMessage(job.channelId!, job.responseMessageId, {
+								content: body.output.transcription,
+								allowed_mentions: { parse: [] },
+						  }),
+				]);
 
 			return response.status(200);
 		});

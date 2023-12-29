@@ -1,7 +1,6 @@
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readdirSync } from "node:fs";
 import { env } from "node:process";
-import type { APIAttachment } from "@discordjs/core";
 import Config from "../../config/bot.config.js";
 import { type RunPodHealthResponse, type RunPodRunResponse, type RunPodRunSyncResponse } from "../../typings/index.js";
 import type Language from "../classes/Language.js";
@@ -319,6 +318,8 @@ export default class Functions {
 			},
 		);
 
+		if (response.status !== 200) return null;
+
 		return response.json() as Promise<RunPodRunResponse | RunPodRunSyncResponse>;
 	}
 
@@ -349,14 +350,14 @@ export default class Functions {
 	/**
 	 * Transcribe an attachment using RunPod.
 	 *
-	 * @param attachment The attachment to transcribe.
+	 * @param attachmentUrl The attachment to transcribe.
 	 * @param infrastructure The infrastructure to use. endpoint may put us in a queue and serverless may have 10+ seconds cold boot times.
 	 * @param endpointType The type of endpoint to use. run or runsync, run will return a job ID and state, runsync will try to return the transcription, if it fails to do so within 90 seconds then it will return a job ID and state.
 	 * @param model The model to use for the transcription. Different models will have different accuracies and speeds.
 	 * @returns The job ID and state, or the transcription.
 	 */
-	public async transcribeAudio(
-		attachment: APIAttachment,
+	public static async transcribeAudio(
+		attachmentUrl: string,
 		infrastructure: "endpoint" | "serverless",
 		endpointType: "run" | "runsync",
 		model: "base" | "large-v1" | "large-v2" | "medium" | "small" | "tiny",
@@ -369,7 +370,7 @@ export default class Functions {
 				method: "POST",
 				body: JSON.stringify({
 					input: {
-						audio: attachment.url,
+						audio: attachmentUrl,
 						model,
 						transcription: "plain_text",
 						translate: true,
@@ -384,7 +385,7 @@ export default class Functions {
 						no_speech_threshold: 0.6,
 					},
 					enable_vad: false,
-					webhook: `${env.BASE_URL}/job_complete`,
+					webhook: `${env.BASE_URL}/job_complete${env.SECRET}`,
 				}),
 				headers: {
 					"Content-Type": "application/json",
