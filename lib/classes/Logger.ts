@@ -101,7 +101,10 @@ export class Logger {
 		if (!type) throw new Error("No webhook type has been provided!");
 		else if (!this.webhooks.get(type.toLowerCase())) {
 			const webhookURL = env[`${type.toUpperCase()}_HOOK`];
-			if (!webhookURL) throw new Error(`No webhook URL has been provided for ${type}!`);
+			if (!webhookURL) {
+				this.warn(`No webhook URL has been provided for ${type}!`);
+				return;
+			}
 
 			this.webhooks.set(type.toLowerCase(), webhookURL);
 		}
