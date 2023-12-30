@@ -140,7 +140,7 @@ export default class AutoCompleteHandler {
 		});
 		const language = this.client.languageHandler.getLanguage(userLanguage?.languageId ?? interaction.locale);
 
-		this.client.dataDog.increment("autocomplete_responses", 1, [`name:${name.join("-")}`, `shard:${shardId}`]);
+		this.client.dataDog?.increment("autocomplete_responses", 1, [`name:${name.join("-")}`, `shard:${shardId}`]);
 
 		return this.runAutoComplete(autoComplete, interactionWithArguments, language, shardId);
 	}

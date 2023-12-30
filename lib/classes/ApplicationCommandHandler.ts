@@ -417,14 +417,14 @@ export default class ApplicationCommandHandler {
 			if (applicationCommand.cooldown)
 				await applicationCommand.applyCooldown((interaction.member?.user ?? interaction.user!).id);
 
-			this.client.dataDog.increment("command_used", 1, [
+			this.client.dataDog?.increment("command_used", 1, [
 				`command:${applicationCommand.name}`,
 				`type:${applicationCommand.type === ApplicationCommandType.ChatInput ? "slash" : "context"}`,
 				`success:true`,
 				`shard:${shardId}`,
 			]);
 		} catch (error) {
-			this.client.dataDog.increment("command_used", 1, [
+			this.client.dataDog?.increment("command_used", 1, [
 				`command:${applicationCommand.name}`,
 				`type:${applicationCommand.type === ApplicationCommandType.ChatInput ? "slash" : "context"}`,
 				`success:false`,

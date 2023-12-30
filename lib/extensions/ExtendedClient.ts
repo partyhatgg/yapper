@@ -176,9 +176,9 @@ export default class ExtendedClient extends Client {
 	public readonly modalHandler: ModalHandler;
 
 	/**
-	 * Our data dog client.
+	 * Our DataDog client.
 	 */
-	public readonly dataDog: typeof metrics;
+	public readonly dataDog?: typeof metrics;
 
 	public constructor({ rest, gateway }: ClientOptions) {
 		super({ rest, gateway });
@@ -245,15 +245,17 @@ export default class ExtendedClient extends Client {
 			});
 		}
 
-		// @ts-expect-error
-		this.dataDog = metrics.default;
+		if (env.DATADOG_API_KEY) {
+			// @ts-expect-error
+			this.dataDog = metrics.default;
 
-		this.dataDog.init({
-			flushIntervalSeconds: 0,
-			apiKey: env.DATADOG_API_KEY,
-			prefix: `${this.config.botName.toLowerCase().split(" ").join("_")}.`,
-			defaultTags: [`env:${env.NODE_ENV}`],
-		});
+			this.dataDog!.init({
+				flushIntervalSeconds: 0,
+				apiKey: env.DATADOG_API_KEY,
+				prefix: `${this.config.botName.toLowerCase().split(" ").join("_")}.`,
+				defaultTags: [`env:${env.NODE_ENV}`],
+			});
+		}
 
 		this.i18n = i18next;
 

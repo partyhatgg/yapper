@@ -43,7 +43,7 @@ export default class EventHandler {
 	 * @returns The result of our event.
 	 */
 	private async _run(...args: any[]) {
-		this.client.dataDog.increment("websocket_events", 1, [`type:${this.name}`]);
+		this.client.dataDog?.increment("websocket_events", 1, [`type:${this.name}`]);
 
 		try {
 			return await this.run(...args);

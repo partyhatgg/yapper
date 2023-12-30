@@ -18,13 +18,13 @@ export default class InteractionCreate extends EventHandler {
 		// This is very cursed, but it works.
 		const dd = data.data as any;
 
-		this.client.dataDog.increment("interactions_created", 1, [
+		this.client.dataDog?.increment("interactions_created", 1, [
 			`name:${dd.name ?? dd.custom_id ?? "null"}`,
 			`type:${data.type.toString()}`,
 			`shard:${shardId}`,
 		]);
 
-		this.client.dataDog.increment("user_locales", 1, [
+		this.client.dataDog?.increment("user_locales", 1, [
 			`locale:${(data.member?.user ?? data.user!).locale ?? this.client.languageHandler.defaultLanguage!.id}`,
 			`shard:${shardId}`,
 		]);

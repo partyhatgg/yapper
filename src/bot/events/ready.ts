@@ -15,7 +15,7 @@ export default class Ready extends EventHandler {
 	 * https://discord.com/developers/docs/topics/gateway-events#ready
 	 */
 	public override async run({ shardId, data }: WithIntrinsicProps<GatewayReadyDispatchData>) {
-		this.client.dataDog.gauge("guild_count", data.guilds.length, [`shard:${shardId}`]);
+		this.client.dataDog?.gauge("guild_count", data.guilds.length, [`shard:${shardId}`]);
 
 		for (const guild of data.guilds) this.client.guildOwnersCache.set(guild.id, "");
 
@@ -24,10 +24,10 @@ export default class Ready extends EventHandler {
 		);
 
 		setInterval(() => {
-			this.client.dataDog.gauge("guilds", this.client.guildOwnersCache.size);
-			this.client.dataDog.gauge("approximate_user_count", this.client.approximateUserCount);
+			this.client.dataDog?.gauge("guilds", this.client.guildOwnersCache.size);
+			this.client.dataDog?.gauge("approximate_user_count", this.client.approximateUserCount);
 
-			this.client.dataDog.flush(
+			this.client.dataDog?.flush(
 				() => {},
 				// eslint-disable-next-line promise/prefer-await-to-callbacks
 				(error) => {

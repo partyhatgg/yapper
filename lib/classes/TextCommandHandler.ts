@@ -190,14 +190,14 @@ export default class TextCommandHandler {
 
 			if (textCommand.cooldown) await textCommand.applyCooldown(message.author.id);
 
-			this.client.dataDog.increment("command_used", 1, [
+			this.client.dataDog?.increment("command_used", 1, [
 				`command:${textCommand.name}`,
 				`type:text`,
 				`success:true`,
 				`shard:${shardId}`,
 			]);
 		} catch (error) {
-			this.client.dataDog.increment("command_used", 1, [
+			this.client.dataDog?.increment("command_used", 1, [
 				`command:${textCommand.name}`,
 				`type:text`,
 				`success:false`,

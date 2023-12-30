@@ -20,7 +20,7 @@ export default class GuildCreate extends EventHandler {
 
 		this.client.guildRolesCache.set(data.id, guildRoles);
 		if (this.client.guildOwnersCache.get(data.id) === undefined) {
-			this.client.dataDog.increment("guild_count", 1, [`shard:${shardId}`]);
+			this.client.dataDog?.increment("guild_count", 1, [`shard:${shardId}`]);
 
 			this.client.guildOwnersCache.set(data.id, data.owner_id);
 			this.client.approximateUserCount += data.member_count;
