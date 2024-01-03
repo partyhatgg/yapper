@@ -92,9 +92,9 @@ export default {
 	MISSING_PERMISSIONS_USER_PERMISSIONS_OTHER_DESCRIPTION:
 		"You are missing the {{missingPermissions}} permissions, which are required to use this {{type}}!",
 	MISSING_PERMISSIONS_CLIENT_PERMISSIONS_ONE_DESCRIPTION:
-		"I are missing the {{missingPermissions}} permission, which I need to run this {{type}}!",
+		"I am missing the {{missingPermissions}} permission, which I need to run this {{type}}!",
 	MISSING_PERMISSIONS_CLIENT_PERMISSIONS_OTHER_DESCRIPTION:
-		"I are missing the {{missingPermissions}} permissions, which I need to run this {{type}}!",
+		"I am missing the {{missingPermissions}} permissions, which I need to run this {{type}}!",
 
 	TYPE_ON_COOLDOWN_TITLE: "{{type}} On Cooldown",
 	TYPE_ON_COOLDOWN_DESCRIPTION: "This {{type}} is on cooldown for another {{formattedTime}}!",
@@ -112,6 +112,9 @@ export default {
 	PONG: "Pong! (Host latency of {{hostLatency}}ms)",
 
 	TRANSCRIBE_COMMAND_NAME: "Transcribe",
+
+	PREMIUM_COMMAND_NAME: "premium",
+	PREMIUM_COMMAND_DESCRIPTION: "Get information about Yapper's premium features.",
 
 	CONFIG_COMMAND_NAME: "config",
 	CONFIG_COMMAND_DESCRIPTION: "Configure Yapper for your server.",

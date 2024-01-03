@@ -18,6 +18,11 @@ enum InfrastructureUsed {
     ENDPOINT
 }
 
+enum PurchaseType {
+    ONCE
+    RECURRING
+}
+
 model Cooldown {
     userId      String
     commandName String
@@ -74,11 +79,32 @@ model PremiumGuild {
 }
 
 model PremiumUser {
-    userId        String         @id
-    premiumGuilds PremiumGuild[]
-    expiresAt     DateTime
+    userId         String             @id
+    maxGuilds      Int
+    premiumGuilds  PremiumGuild[]
+    expiresAt      DateTime?
+    purchase       PremiumPurchase[]
 
     @@map("premium_users")
+}
+
+model PremiumPurchase {
+    purchaseId    String @id
+    priceId       String
+    userId        String @unique
+
+    product       PremiumProduct @relation(fields: [priceId], references: [id])
+    user          PremiumUser    @relation(fields: [userId], references: [userId])
+}
+
+model PremiumProduct {
+    id        String @id
+    maxGuilds Int
+    price     BigInt?
+    type      PurchaseType
+    purchases PremiumPurchase[]
+
+    @@map("premium_products")
 }
 
 model IgnoredUser {

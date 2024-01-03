@@ -1,10 +1,11 @@
-import { env, exit } from "node:process";
+import { env } from "node:process";
 import { setInterval } from "node:timers";
 import { API, ButtonStyle, ComponentType } from "@discordjs/core";
 import { REST } from "@discordjs/rest";
+import { serve } from "@hono/node-server";
 import { InfrastructureUsed, PrismaClient } from "@prisma/client";
-import type { FastifyInstance } from "fastify";
-import { fastify } from "fastify";
+import { Hono } from "hono";
+import Stripe from "stripe";
 import type { RunPodRunSyncResponse } from "../../typings/index.js";
 import Functions, { TranscriptionState } from "../utilities/functions.js";
 import Logger from "./Logger.js";
@@ -16,9 +17,9 @@ export default class Server {
 	private readonly port: number;
 
 	/**
-	 * Our Fastify instance.
+	 * Our Hono instance.
 	 */
-	private readonly router: FastifyInstance;
+	private readonly router: Hono;
 
 	/**
 	 * Our Prisma client, this is an ORM to interact with our PostgreSQL instance.
@@ -47,14 +48,19 @@ export default class Server {
 	private readonly discordApi = new API(new REST({ version: "10" }).setToken(env.DISCORD_TOKEN));
 
 	/**
-	 * Create our Fastify server.
+	 * Authenticated access to the Stripe API
+	 */
+	private readonly stripeAPI = new Stripe(env.STRIPE_KEY);
+
+	/**
+	 * Create our Hono server.
 	 *
 	 * @param port The port the server should run on.
 	 */
 	public constructor(port: number) {
 		this.port = port;
 
-		this.router = fastify({ logger: false, trustProxy: 1 });
+		this.router = new Hono();
 
 		this.prisma = new PrismaClient({
 			errorFormat: "pretty",
@@ -111,15 +117,14 @@ export default class Server {
 		this.registerRoutes();
 
 		// eslint-disable-next-line promise/prefer-await-to-callbacks
-		this.router.listen({ port: this.port, host: "0.0.0.0" }, (error, address) => {
-			if (error) {
-				Logger.error(error);
-				Logger.sentry.captureException(error);
+		serve({ fetch: this.router.fetch, port: this.port }, (info) => {
+			// if (error) {
+			// 	Logger.error(error);
+			// 	Logger.sentry.captureException(error);
+			// 	exit(1);
+			// }
 
-				exit(1);
-			}
-
-			Logger.info(`Fastify server started, listening on ${address}.`);
+			Logger.info(`Hono server started, listening on ${info.address}.`);
 		});
 
 		setInterval(async () => {
@@ -153,17 +158,25 @@ export default class Server {
 	 * Register our routes.
 	 */
 	private registerRoutes() {
-		this.router.get("/ping", (_, response) => response.send("PONG!"));
+		this.router.get("/ping", (context) => context.text("PONG!"));
 
-		this.router.get("/", (_, response) => response.redirect("https://polar.blue"));
+		this.router.get("/", (context) => context.redirect("https://polar.blue"));
 
-		this.router.post("/job_complete", async (request, response) => {
-			// console.log(request);
-			const body: RunPodRunSyncResponse = typeof request.body === "string" ? JSON.parse(request.body) : request.body;
+		this.router.post("/job_complete", async (context) => {
+			let body: RunPodRunSyncResponse;
+
+			try {
+				body = await context.req.json();
+			} catch {
+				return context.json({ ack: true, runpod: false });
+			}
 
 			const job = await this.prisma.job.findUnique({ where: { id: body.id } });
 
-			if (!job) return response.status(400).send({ message: "Job not found." });
+			if (!job) {
+				context.status(400);
+				return context.json({ message: "Job not found." });
+			}
 
 			const [premiumGuild] = await Promise.all([
 				this.prisma.premiumGuild.findUnique({ where: { guildId: job.guildId }, include: { purchaser: true } }),
@@ -176,7 +189,10 @@ export default class Server {
 					: await this.discordApi.channels.getMessage(job.channelId!, job.initialMessageId);
 
 				const splitTranscription = body.output.transcription.match(/.{1,1999}/g);
-				if (!splitTranscription) return response.status(500).send({ message: "Failed to split transcription." });
+				if (!splitTranscription) {
+					context.status(500);
+					return context.json({ message: "Failed to split transcription." });
+				}
 
 				const threadName = `${(message.interaction?.user ?? message.author).username}${
 					(message.interaction?.user ?? message.author).discriminator === "0"
@@ -225,7 +241,7 @@ export default class Server {
 								? `${splitTranscription[index]}${
 										index === splitTranscription.length - 1 &&
 										body.output.model === "base" &&
-										(premiumGuild?.purchaser.expiresAt.getTime() ?? 0) > Date.now()
+										(premiumGuild?.purchaser.expiresAt?.getTime() ?? 0) > Date.now()
 											? "\n\n⚡ A higher quality message is currently being transcribed."
 											: ""
 								  }`
@@ -250,7 +266,7 @@ export default class Server {
 					});
 				}
 
-				if (body.output.model === "base" && (premiumGuild?.purchaser.expiresAt.getTime() ?? 0) > Date.now()) {
+				if (body.output.model === "base" && (premiumGuild?.purchaser.expiresAt?.getTime() ?? 0) > Date.now()) {
 					const newJob = await Functions.transcribeAudio(job.attachmentUrl, "serverless", "run", "large-v2");
 
 					await Promise.all([
@@ -296,10 +312,10 @@ export default class Server {
 						}),
 					]);
 
-				return response.status(200);
+				return context.text("Success");
 			}
 
-			if (body.output.model === "base" && (premiumGuild?.purchaser.expiresAt.getTime() ?? 0) > Date.now()) {
+			if (body.output.model === "base" && (premiumGuild?.purchaser.expiresAt?.getTime() ?? 0) > Date.now()) {
 				const newJob = await Functions.transcribeAudio(job.attachmentUrl, "serverless", "run", "large-v2");
 
 				await Promise.all([
@@ -375,7 +391,106 @@ export default class Server {
 						  }),
 				]);
 
-			return response.status(200);
+			return context.text("Success");
+		});
+
+		this.router.post("/purchase", async (context) => {
+			const body = await context.req.text();
+			let event: Stripe.Event;
+
+			try {
+				event = await Stripe.webhooks.constructEventAsync(
+					body,
+					context.req.header("stripe-signature")!,
+					env.STRIPE_WEBHOOK_SECRET,
+				);
+			} catch (error) {
+				context.status(400);
+				return context.json({ ack: true, error });
+			}
+
+			try {
+				event = JSON.parse(body);
+			} catch (error) {
+				return context.json({ ack: true, error });
+			}
+
+			if (event.type === "checkout.session.completed") {
+				const user_id = event.data.object.metadata?.user_id;
+
+				if (!user_id) {
+					await Logger.webhookLog("billing", {
+						content: "Received purchase but didn't know who to assign it to. Please investigate.",
+					});
+					return context.json("Received purchase but didn't know who to assign it to. Please investigate.");
+				}
+
+				await this.stripeAPI.customers.update(event.data.object.customer as string, {
+					metadata: {
+						user_id,
+					},
+				});
+
+				const invoice = await this.stripeAPI.invoices.retrieve(event.data.object.invoice as string);
+
+				Logger.debug(JSON.stringify(invoice.lines.data));
+
+				await this.prisma.premiumUser.upsert({
+					create: {
+						userId: user_id,
+						maxGuilds: Number(event.data.object.metadata?.max_guilds),
+					},
+					update: {},
+					where: { userId: user_id },
+				});
+			} else if (event.type === "invoice.paid") {
+				const user_id = (
+					(await this.stripeAPI.customers.retrieve(event.data.object.customer as string)) as Stripe.Customer
+				).metadata.user_id;
+
+				if (!user_id) {
+					await Logger.webhookLog("billing", {
+						content: "A user renewed their subscription, but I didn't know who to assign it to. Please investigate.",
+					});
+					return context.json(
+						"A user renewed their subscription, but I didn't know who to assign it to. Please investigate.",
+					);
+				}
+
+				await this.prisma.premiumUser.upsert({
+					create: {
+						userId: user_id,
+						maxGuilds: Number(event.data.object.metadata?.max_guilds),
+						expiresAt: new Date(event.data.object.period_end),
+					},
+					update: {
+						expiresAt: new Date(event.data.object.period_end),
+					},
+					where: { userId: user_id },
+				});
+			} else if (event.type === "invoice.payment_failed") {
+				const user_id = (
+					(await this.stripeAPI.customers.retrieve(event.data.object.customer as string)) as Stripe.Customer
+				).metadata.user_id;
+
+				if (!user_id) {
+					await Logger.webhookLog("billing", {
+						content: "A user's subscription has failed, but I don't know who! Please investigate.",
+					});
+					return context.json("A user's subscription has failed, but I don't know who! Please investigate.");
+				}
+
+				await this.prisma.premiumUser.delete({
+					where: {
+						userId: user_id,
+					},
+				});
+				return context.json("Payment Failed for User");
+			} else {
+				return context.json({ ack: true });
+			}
+
+			return context.json({ ack: true });
 		});
 	}
 }

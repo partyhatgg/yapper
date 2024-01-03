@@ -24,6 +24,7 @@ import SelectMenuHandler from "../classes/SelectMenuHandler.js";
 import type TextCommand from "../classes/TextCommand.js";
 import TextCommandHandler from "../classes/TextCommandHandler.js";
 import Functions from "../utilities/functions.js";
+import Stripe from "stripe";
 
 export default class ExtendedClient extends Client {
 	/**
@@ -180,6 +181,11 @@ export default class ExtendedClient extends Client {
 	 */
 	public readonly dataDog?: typeof metrics;
 
+	/**
+	 * Our Stripe client
+	 */
+	public readonly stripe?: Stripe;
+
 	public constructor({ rest, gateway }: ClientOptions) {
 		super({ rest, gateway });
 
@@ -255,6 +261,10 @@ export default class ExtendedClient extends Client {
 				prefix: `${this.config.botName.toLowerCase().split(" ").join("_")}.`,
 				defaultTags: [`env:${env.NODE_ENV}`],
 			});
+		}
+
+		if (env.STRIPE_KEY) {
+			this.stripe = new Stripe(env.STRIPE_KEY);
 		}
 
 		this.i18n = i18next;

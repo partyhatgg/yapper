@@ -42,7 +42,7 @@ export default class MessageCreate extends EventHandler {
 					include: { purchaser: true },
 				});
 
-				if ((premiumGuild?.purchaser.expiresAt.getTime() ?? 0) < Date.now())
+				if ((premiumGuild?.purchaser.expiresAt?.getTime() ?? 0) < Date.now())
 					return this.client.textCommandHandler.handleTextCommand({ data: message, shardId });
 			}
 

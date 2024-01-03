@@ -46,7 +46,7 @@ export default class TranscribeContextMenu extends ApplicationCommand {
 			include: { purchaser: true },
 		});
 
-		if ((premiumGuild?.purchaser.expiresAt.getTime() ?? 0) < Date.now())
+		if ((premiumGuild?.purchaser.expiresAt?.getTime() ?? 0) < Date.now())
 			return [
 				false,
 				{
