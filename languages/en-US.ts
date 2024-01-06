@@ -114,7 +114,25 @@ export default {
 	TRANSCRIBE_COMMAND_NAME: "Transcribe",
 
 	PREMIUM_COMMAND_NAME: "premium",
-	PREMIUM_COMMAND_DESCRIPTION: "Get information about Yapper's premium features.",
+	PREMIUM_COMMAND_DESCRIPTION: "Manage Yapper premium.",
+	PREMIUM_COMMAND_INFO_SUB_COMMAND_NAME: "info",
+	PREMIUM_COMMAND_INFO_SUB_COMMAND_DESCRIPTION: "Get information about Yapper premium or subscribe.",
+	PREMIUM_COMMAND_APPLY_SUB_COMMAND_NAME: "apply",
+	PREMIUM_COMMAND_APPLY_SUB_COMMAND_DESCRIPTION: "Apply premium to the current server.",
+	PREMIUM_COMMAND_REMOVE_SUB_COMMAND_NAME: "remove",
+	PREMIUM_COMMAND_REMOVE_SUB_COMMAND_DESCRIPTION: "Remove premium from a server.",
+	PREMIUM_COMMAND_REMOVE_SUB_COMMAND_SERVER_OPTION_NAME: "server",
+	PREMIUM_COMMAND_REMOVE_SUB_COMMAND_SERVER_OPTION_DESCRIPTION:
+		"The server to remove premium from, defaults to the current server if not specified.",
+
+	PREMIUM_INFO_NO_PRODUCTS_TITLE: "No Products Available",
+	PREMIUM_INFO_NO_PRODUCTS_DESCRIPTION:
+		"There are currently no products available for purchase, thus Premium is unavailable.",
+
+	PREMIUM_INFO_TITLE: "Yapper Premium",
+	PREMIUM_INFO_DESCRIPTION:
+		"Yapper Premium offers transcriptions of audio and video attachments, removal of the five minute content length limit, as well as higher quality transcriptions. Subscribe to a plan by choosing one from the dropdown below!{{subscriptionInfo}}",
+	SUBSCRIPTION_INFO: `\n\nYou are currently subscribed to Yapper Premium and have {{appliedGuildCount}}/{{maxGuildCount}} active premium guilds. Your subscription will renew on {{date}}!`,
 
 	CONFIG_COMMAND_NAME: "config",
 	CONFIG_COMMAND_DESCRIPTION: "Configure Yapper for your server.",

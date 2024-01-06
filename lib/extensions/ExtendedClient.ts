@@ -7,6 +7,7 @@ import { PrismaClient } from "@prisma/client";
 import * as metrics from "datadog-metrics";
 import i18next from "i18next";
 import intervalPlural from "i18next-intervalplural-postprocessor";
+import Stripe from "stripe";
 import Config from "../../config/bot.config.js";
 import type ApplicationCommand from "../classes/ApplicationCommand.js";
 import ApplicationCommandHandler from "../classes/ApplicationCommandHandler.js";
@@ -24,7 +25,6 @@ import SelectMenuHandler from "../classes/SelectMenuHandler.js";
 import type TextCommand from "../classes/TextCommand.js";
 import TextCommandHandler from "../classes/TextCommandHandler.js";
 import Functions from "../utilities/functions.js";
-import Stripe from "stripe";
 
 export default class ExtendedClient extends Client {
 	/**
@@ -193,6 +193,7 @@ export default class ExtendedClient extends Client {
 
 		this.config = Config;
 		this.config.version =
+			// eslint-disable-next-line n/no-sync
 			execSync("git rev-parse HEAD").toString().trim().slice(0, 7) + env.NODE_ENV === "development" ? "dev" : "";
 
 		this.logger = Logger;

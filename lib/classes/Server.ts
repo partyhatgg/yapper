@@ -1,6 +1,6 @@
 import { env } from "node:process";
 import { setInterval } from "node:timers";
-import { API, ButtonStyle, ComponentType } from "@discordjs/core";
+import { API, AllowedMentionsTypes, ButtonStyle, ComponentType } from "@discordjs/core";
 import { REST } from "@discordjs/rest";
 import { serve } from "@hono/node-server";
 import { InfrastructureUsed, PrismaClient } from "@prisma/client";
@@ -398,6 +398,15 @@ export default class Server {
 			const body = await context.req.text();
 			let event: Stripe.Event;
 
+			// checkout.session.completed
+			// -> User pressed purchase/checkout/etc. This is the only time we have customer metadata (from the sessions.create call)
+			// -> We need to: create a premiumUser with the subscription ID, userId, and when their subscription expire
+			// invoice.paid
+			// -> User automatically renewed their subscription. We only know the customer by ID (cus_5789656) and need to fetch them.
+			// -> We need to: grab the user via data.object.subscription, and update their expiresAt.
+			// invoice.payment_failed
+			// -> Delete the premiumUser
+
 			try {
 				event = await Stripe.webhooks.constructEventAsync(
 					body,
@@ -409,20 +418,16 @@ export default class Server {
 				return context.json({ ack: true, error });
 			}
 
-			try {
-				event = JSON.parse(body);
-			} catch (error) {
-				return context.json({ ack: true, error });
-			}
-
 			if (event.type === "checkout.session.completed") {
 				const user_id = event.data.object.metadata?.user_id;
-
 				if (!user_id) {
 					await Logger.webhookLog("billing", {
-						content: "Received purchase but didn't know who to assign it to. Please investigate.",
+						content: `Received purchase \`${event.id}\` but didn't know who to assign it to. Please investigate.`,
 					});
-					return context.json("Received purchase but didn't know who to assign it to. Please investigate.");
+
+					return context.json(
+						`Received purchase \`${event.id}\` but didn't know who to assign it to. Please investigate.`,
+					);
 				}
 
 				await this.stripeAPI.customers.update(event.data.object.customer as string, {
@@ -431,61 +436,77 @@ export default class Server {
 					},
 				});
 
-				const invoice = await this.stripeAPI.invoices.retrieve(event.data.object.invoice as string);
-
-				Logger.debug(JSON.stringify(invoice.lines.data));
-
 				await this.prisma.premiumUser.upsert({
 					create: {
 						userId: user_id,
-						maxGuilds: Number(event.data.object.metadata?.max_guilds),
+						subscriptionId: event.data.object.subscription as string,
+						expiresAt: new Date(event.data.object.expires_at),
 					},
-					update: {},
+					update: {
+						subscriptionId: event.data.object.subscription as string,
+						expiresAt: new Date(event.data.object.expires_at),
+					},
 					where: { userId: user_id },
 				});
 			} else if (event.type === "invoice.paid") {
-				const user_id = (
-					(await this.stripeAPI.customers.retrieve(event.data.object.customer as string)) as Stripe.Customer
-				).metadata.user_id;
+				const customer = (await this.stripeAPI.customers.retrieve(
+					event.data.object.customer as string,
+				)) as Stripe.Customer;
 
-				if (!user_id) {
+				if (!customer.metadata.user_id) {
 					await Logger.webhookLog("billing", {
-						content: "A user renewed their subscription, but I didn't know who to assign it to. Please investigate.",
+						content: `Subscription \`${event.data.object.id}\` paid without a user. Please investigate.`,
 					});
-					return context.json(
-						"A user renewed their subscription, but I didn't know who to assign it to. Please investigate.",
-					);
+					return context.json(`Subscription \`${event.data.object.id}\` paid without a user. Please investigate.`);
 				}
 
-				await this.prisma.premiumUser.upsert({
-					create: {
-						userId: user_id,
-						maxGuilds: Number(event.data.object.metadata?.max_guilds),
-						expiresAt: new Date(event.data.object.period_end),
-					},
-					update: {
-						expiresAt: new Date(event.data.object.period_end),
-					},
-					where: { userId: user_id },
-				});
-			} else if (event.type === "invoice.payment_failed") {
-				const user_id = (
-					(await this.stripeAPI.customers.retrieve(event.data.object.customer as string)) as Stripe.Customer
-				).metadata.user_id;
-
-				if (!user_id) {
-					await Logger.webhookLog("billing", {
-						content: "A user's subscription has failed, but I don't know who! Please investigate.",
+				try {
+					await this.prisma.premiumUser.update({
+						data: {
+							subscriptionId: event.data.object.subscription as string,
+							expiresAt: new Date(event.data.object.period_end),
+						},
+						where: { userId: customer.metadata.user_id },
 					});
-					return context.json("A user's subscription has failed, but I don't know who! Please investigate.");
+				} catch {
+					await Logger.webhookLog("billing", {
+						content: `@everyone — Failed to create premium user for \`${event.data.object.id}\`. This is a rare error (hopefully)!`,
+						allowed_mentions: {
+							parse: [AllowedMentionsTypes.Everyone],
+						},
+					});
+				}
+			} else if (event.type === "invoice.payment_failed") {
+				const customer = (await this.stripeAPI.customers.retrieve(
+					event.data.object.customer as string,
+				)) as Stripe.Customer;
+
+				if (!customer.metadata.user_id) {
+					await Logger.webhookLog("billing", {
+						content: `Subscription \`${event.data.object.id}\` failed without a user. Please investigate.`,
+					});
+					return context.json(`Subscription \`${event.data.object.id}\` failed without a user. Please investigate.`);
 				}
 
 				await this.prisma.premiumUser.delete({
 					where: {
-						userId: user_id,
+						userId: customer.metadata.user_id,
 					},
 				});
-				return context.json("Payment Failed for User");
+				return context.json("Marked payment as failed, deleted user.");
+			} else if (event.type === "customer.deleted") {
+				const customer = event.data.object;
+
+				if (!customer.metadata.user_id) {
+					return context.json({ ack: true });
+				}
+
+				await this.prisma.premiumUser.delete({
+					where: {
+						userId: customer.metadata.user_id,
+					},
+				});
+				return context.json("Deleted premium user as requested.");
 			} else {
 				return context.json({ ack: true });
 			}

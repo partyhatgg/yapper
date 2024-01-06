@@ -30,9 +30,9 @@ export default class Ready extends EventHandler {
 			this.client.dataDog?.flush(
 				() => {},
 				// eslint-disable-next-line promise/prefer-await-to-callbacks
-				(error) => {
-					this.client.logger.error(error);
-					this.client.logger.sentry.captureException(error);
+				(_error) => {
+					// this.client.logger.error(error);
+					// this.client.logger.sentry.captureException(error);
 				},
 			);
 		}, 10_000);

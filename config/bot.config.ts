@@ -67,12 +67,4 @@ export default {
 	 * A list of permissions that the bot needs to function at all.
 	 */
 	requiredPermissions: PermissionFlagsBits.EmbedLinks | PermissionFlagsBits.SendMessages,
-
-	products: [
-		{
-			name: "Yapper Premium x1",
-			maxGuilds: 1,
-			priceId: "price_1OUETiDSWpXuQ0PZPz216i3m",
-		},
-	],
 };
