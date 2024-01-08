@@ -175,4 +175,20 @@ export default {
 	UNIGORED_SUCCESSFULLY_DESCRIPTION: "Yapper will no longer ignore any messages from you.",
 
 	USER_IS_IGNORED_ERROR: "This user has opted out of Yapper, their messages can not be transcribed.",
+
+	NOT_A_GUILD_TITLE: "Not A Server",
+	NOT_A_GUILD_DESCRIPTION: "You can only use this command in a server!",
+
+	NOT_A_PREMIUM_USER_ERROR_TITLE: "Not A Premium User",
+	NOT_A_PREMIUM_USER_ERROR_DESCRIPTION: "You are not a premium user, please subscribe to premium to use this command.",
+
+	MAX_GUILD_COUNT_REACHED_ERROR_TITLE: "Max Guild Count Reached",
+	MAX_GUILD_COUNT_REACHED_ERROR_DESCRIPTION:
+		"You have reached your maximum guild count, please remove a guild from premium to add another.",
+
+	PREMIUM_APPLIED_TITLE: "Premium Applied",
+	PREMIUM_APPLIED_DESCRIPTION: "This server is now a premium guild!",
+
+	PREMIUM_REMOVED_TITLE: "Premium Removed",
+	PREMIUM_REMOVED_DESCRIPTION: "This server is no longer a premium guild!",
 };

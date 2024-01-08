@@ -121,6 +121,7 @@ export default class Premium extends ApplicationCommand {
 
 			if (premiumUser?.subscriptionId) {
 				subscription = await this.client.stripe?.subscriptions.retrieve(premiumUser.subscriptionId);
+				if (!subscription) await this.client.prisma.premiumUser.delete({ where: { userId: premiumUser.userId } });
 			}
 
 			return this.client.api.interactions.reply(interaction.id, interaction.token, {
@@ -169,50 +170,140 @@ export default class Premium extends ApplicationCommand {
 					  ]
 					: [],
 			});
+		} else if (
+			interaction.arguments.subCommand?.name ===
+			this.client.languageHandler.defaultLanguage!.get("PREMIUM_COMMAND_APPLY_SUB_COMMAND_NAME")
+		) {
+			if (!interaction.guild_id)
+				return this.client.api.interactions.reply(interaction.id, interaction.token, {
+					embeds: [
+						{
+							title: language.get("NOT_A_GUILD_TITLE"),
+							description: language.get("NOT_A_GUILD_DESCRIPTION"),
+							color: this.client.config.colors.error,
+						},
+					],
+					allowed_mentions: { parse: [], replied_user: true },
+					flags: MessageFlags.Ephemeral,
+				});
+
+			const premiumUser = await this.client.prisma.premiumUser.findUnique({
+				include: { _count: { select: { premiumGuilds: true } } },
+				where: { userId: interaction.member!.user.id },
+			});
+
+			if (!premiumUser)
+				return this.client.api.interactions.reply(interaction.id, interaction.token, {
+					embeds: [
+						{
+							title: language.get("NOT_A_PREMIUM_USER_ERROR_TITLE"),
+							description: language.get("NOT_A_PREMIUM_USER_ERROR_DESCRIPTION"),
+							color: this.client.config.colors.error,
+						},
+					],
+					allowed_mentions: { parse: [], replied_user: true },
+					flags: MessageFlags.Ephemeral,
+				});
+
+			const subscription = await this.client.stripe?.subscriptions.retrieve(premiumUser.subscriptionId);
+
+			if (!subscription) {
+				await this.client.prisma.premiumUser.delete({ where: { userId: premiumUser.userId } });
+
+				return this.client.api.interactions.reply(interaction.id, interaction.token, {
+					embeds: [
+						{
+							title: language.get("NOT_A_PREMIUM_USER_ERROR_TITLE"),
+							description: language.get("NOT_A_PREMIUM_USER_ERROR_DESCRIPTION"),
+							color: this.client.config.colors.error,
+						},
+					],
+					allowed_mentions: { parse: [], replied_user: true },
+					flags: MessageFlags.Ephemeral,
+				});
+			}
+
+			if (premiumUser._count.premiumGuilds >= (subscription.items.data[0]?.quantity ?? 0)) {
+				return this.client.api.interactions.reply(interaction.id, interaction.token, {
+					embeds: [
+						{
+							title: language.get("MAX_GUILD_COUNT_REACHED_ERROR_TITLE"),
+							description: language.get("MAX_GUILD_COUNT_REACHED_ERROR_DESCRIPTION"),
+							color: this.client.config.colors.error,
+						},
+					],
+					allowed_mentions: { parse: [], replied_user: true },
+					flags: MessageFlags.Ephemeral,
+				});
+			}
+
+			return Promise.all([
+				this.client.prisma.premiumGuild.upsert({
+					where: { guildId: interaction.data.guild_id! },
+					create: { guildId: interaction.guild_id!, purchaserId: interaction.member!.user.id },
+					update: { purchaserId: interaction.member!.user.id },
+				}),
+				this.client.api.interactions.reply(interaction.id, interaction.token, {
+					embeds: [
+						{
+							title: language.get("PREMIUM_APPLIED_TITLE"),
+							description: language.get("PREMIUM_APPLIED_DESCRIPTION"),
+							color: this.client.config.colors.success,
+						},
+					],
+					allowed_mentions: { parse: [], replied_user: true },
+					flags: MessageFlags.Ephemeral,
+				}),
+			]);
+		} else if (
+			interaction.arguments.subCommand?.name ===
+			this.client.languageHandler.defaultLanguage!.get("PREMIUM_COMMAND_REMOVE_SUB_COMMAND_NAME")
+		) {
+			if (!interaction.guild_id)
+				return this.client.api.interactions.reply(interaction.id, interaction.token, {
+					embeds: [
+						{
+							title: language.get("NOT_A_GUILD_TITLE"),
+							description: language.get("NOT_A_GUILD_DESCRIPTION"),
+							color: this.client.config.colors.error,
+						},
+					],
+					allowed_mentions: { parse: [], replied_user: true },
+					flags: MessageFlags.Ephemeral,
+				});
+
+			const premiumUser = await this.client.prisma.premiumUser.findUnique({
+				include: { _count: { select: { premiumGuilds: true } } },
+				where: { userId: interaction.member!.user.id },
+			});
+
+			if (!premiumUser)
+				return this.client.api.interactions.reply(interaction.id, interaction.token, {
+					embeds: [
+						{
+							title: language.get("NOT_A_PREMIUM_USER_ERROR_TITLE"),
+							description: language.get("NOT_A_PREMIUM_USER_ERROR_DESCRIPTION"),
+							color: this.client.config.colors.error,
+						},
+					],
+					allowed_mentions: { parse: [], replied_user: true },
+					flags: MessageFlags.Ephemeral,
+				});
+
+			return Promise.all([
+				this.client.prisma.premiumGuild.deleteMany({ where: { guildId: interaction.guild_id! } }),
+				this.client.api.interactions.reply(interaction.id, interaction.token, {
+					embeds: [
+						{
+							title: language.get("PREMIUM_REMOVED_TITLE"),
+							description: language.get("PREMIUM_REMOVED_DESCRIPTION"),
+							color: this.client.config.colors.success,
+						},
+					],
+					allowed_mentions: { parse: [], replied_user: true },
+					flags: MessageFlags.Ephemeral,
+				}),
+			]);
 		}
-
-		// const premiumUser = await this.client.prisma.premiumUser.findUnique({
-		// 	include: { premiumGuilds: true },
-		// 	where: { userId: interaction.member!.user.id },
-		// });
-
-		// if (premiumUser) {
-		// 	if (premiumUser.premiumGuilds.length >= premiumUser.maxGuilds) {
-		// 		return this.client.api.interactions.reply(interaction.id, interaction.token, {
-		// 			content: "You've assigned your maximum amount of premium guilds already",
-		// 			allowed_mentions: { parse: [], replied_user: true },
-		// 			flags: MessageFlags.Ephemeral,
-		// 		});
-		// 	}
-
-		// 	return this.client.api.interactions.reply(interaction.id, interaction.token, {
-		// 		content: "You are already premium!",
-		// 		allowed_mentions: { parse: [], replied_user: true },
-		// 		flags: MessageFlags.Ephemeral,
-		// 	});
-		// } else {
-		// 	const session = await this.client.stripe?.checkout.sessions.create({
-		// 		mode: "subscription",
-		// 		line_items: [
-		// 			{
-		// 				price: this.client.config.products[0]!.priceId,
-		// 				quantity: 1,
-		// 			},
-		// 		],
-		// 		metadata: {
-		// 			user_id: interaction.member!.user.id,
-		// 			guild_id: interaction.guild_id ?? null,
-		// 			max_guilds: this.client.config.products[0]!.maxGuilds,
-		// 		},
-		// 		success_url: `https://partyhat.gg/billing/success?session_id={CHECKOUT_SESSION_ID}`,
-		// 		cancel_url: `https://partyhat.gg/billing/cancel`,
-		// 	});
-
-		// 	return this.client.api.interactions.reply(interaction.id, interaction.token, {
-		// 		content: `[Here's a link to purchase Yapper Premium!](${session?.url})`,
-		// 		allowed_mentions: { parse: [], replied_user: true },
-		// 		flags: MessageFlags.Ephemeral,
-		// 	});
-		// }
 	}
 }
