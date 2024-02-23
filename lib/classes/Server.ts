@@ -188,7 +188,7 @@ export default class Server {
 					? await this.discordApi.interactions.getOriginalReply(env.APPLICATION_ID, job.interactionToken!)
 					: await this.discordApi.channels.getMessage(job.channelId!, job.initialMessageId);
 
-				const splitTranscription = body.output.transcription.match(/.{1,1999}/g);
+				const splitTranscription = body.output.transcription.match(/.{1,1997}/g);
 				if (!splitTranscription) {
 					context.status(500);
 					return context.json({ message: "Failed to split transcription." });
@@ -212,7 +212,7 @@ export default class Server {
 
 				if (job.interactionId)
 					await this.discordApi.interactions.editReply(env.APPLICATION_ID, job.interactionToken!, {
-						content: firstTranscription!.endsWith(" ") ? firstTranscription : `${firstTranscription}—`,
+						content: firstTranscription!.endsWith(" ") ? `🗣️ ${firstTranscription}` : `🗣️ ${firstTranscription}—`,
 						allowed_mentions: { parse: [] },
 						components: [
 							{
@@ -230,7 +230,7 @@ export default class Server {
 					});
 				else
 					await this.discordApi.channels.editMessage(job.channelId!, job.initialMessageId, {
-						content: firstTranscription!.endsWith(" ") ? firstTranscription : `${firstTranscription}—`,
+						content: firstTranscription!.endsWith(" ") ? `🗣️ ${firstTranscription}` : `🗣️ ${firstTranscription}—`,
 						allowed_mentions: { parse: [] },
 					});
 
@@ -238,14 +238,14 @@ export default class Server {
 					await this.discordApi.channels.createMessage(thread.id, {
 						content:
 							index === splitTranscription.length - 1 || splitTranscription[index]?.endsWith(" ")
-								? `${splitTranscription[index]}${
+								? `🗣️ ${splitTranscription[index]}${
 										index === splitTranscription.length - 1 &&
 										body.output.model === "base" &&
 										(premiumGuild?.purchaser.expiresAt?.getTime() ?? 0) > Date.now()
 											? "\n\n⚡ A higher quality message is currently being transcribed."
 											: ""
 								  }`
-								: `${splitTranscription[index]}—`,
+								: `🗣️ ${splitTranscription[index]}—`,
 						allowed_mentions: { parse: [] },
 						components:
 							index === splitTranscription.length - 1
@@ -397,6 +397,7 @@ export default class Server {
 		this.router.post("/purchase", async (context) => {
 			const body = await context.req.text();
 			let event: Stripe.Event;
+			console.log("balls", body, context.req.header("stripe-signature"));
 
 			// checkout.session.completed
 			// -> User pressed purchase/checkout/etc. This is the only time we have customer metadata (from the sessions.create call)
@@ -413,6 +414,7 @@ export default class Server {
 					context.req.header("stripe-signature")!,
 					env.STRIPE_WEBHOOK_SECRET,
 				);
+				console.log(event);
 			} catch (error) {
 				context.status(400);
 				return context.json({ ack: true, error });

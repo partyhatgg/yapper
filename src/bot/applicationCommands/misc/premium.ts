@@ -46,6 +46,7 @@ export default class Premium extends ApplicationCommand {
 									description: "PREMIUM_COMMAND_REMOVE_SUB_COMMAND_SERVER_OPTION_DESCRIPTION",
 								}),
 								type: ApplicationCommandOptionType.String,
+								autocomplete: true, // TODO: Write the logic for this.
 							},
 						],
 					},
@@ -239,7 +240,7 @@ export default class Premium extends ApplicationCommand {
 
 			return Promise.all([
 				this.client.prisma.premiumGuild.upsert({
-					where: { guildId: interaction.data.guild_id! },
+					where: { guildId: interaction.guild_id! },
 					create: { guildId: interaction.guild_id!, purchaserId: interaction.member!.user.id },
 					update: { purchaserId: interaction.member!.user.id },
 				}),
@@ -290,8 +291,13 @@ export default class Premium extends ApplicationCommand {
 					flags: MessageFlags.Ephemeral,
 				});
 
+			const guild =
+				interaction.arguments.strings?.[
+					this.client.languageHandler.defaultLanguage!.get("PREMIUM_COMMAND_REMOVE_SUB_COMMAND_SERVER_OPTION_NAME")
+				];
+
 			return Promise.all([
-				this.client.prisma.premiumGuild.deleteMany({ where: { guildId: interaction.guild_id! } }),
+				this.client.prisma.premiumGuild.deleteMany({ where: { guildId: guild?.value ?? interaction.guild_id } }),
 				this.client.api.interactions.reply(interaction.id, interaction.token, {
 					embeds: [
 						{

@@ -51,7 +51,7 @@ export default class TranscribeContextMenu extends ApplicationCommand {
 				false,
 				{
 					title: language.get("NOT_A_PREMIUM_GUILD_ERROR_TITLE"),
-					description: language.get("NOT_A_PREMIUM_GUILD_FILES_ERROR_DESCRIPTION"),
+					description: language.get("NOT_A_PREMIUM_GUILD_CONTEXT_MENU_ERROR_DESCRIPTION"),
 				},
 			];
 

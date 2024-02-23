@@ -162,6 +162,8 @@ export default {
 	TRANSCRIBED_MESSAGE_BUTTON_LABEL: "Transcribed Message",
 
 	NOT_A_PREMIUM_GUILD_ERROR_TITLE: "Not A Premium Guild",
+	NOT_A_PREMIUM_GUILD_CONTEXT_MENU_ERROR_DESCRIPTION:
+		"This server is not a premium guild, please upgrade to premium to use context menus.",
 	NOT_A_PREMIUM_GUILD_FILES_ERROR_DESCRIPTION:
 		"This server is not a premium guild, please upgrade to premium to transcribe files.",
 
@@ -190,5 +192,5 @@ export default {
 	PREMIUM_APPLIED_DESCRIPTION: "This server is now a premium guild!",
 
 	PREMIUM_REMOVED_TITLE: "Premium Removed",
-	PREMIUM_REMOVED_DESCRIPTION: "This server is no longer a premium guild!",
+	PREMIUM_REMOVED_DESCRIPTION: "I have removed premium from the guild you've provided!",
 };
