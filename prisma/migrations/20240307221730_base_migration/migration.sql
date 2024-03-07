@@ -4,6 +4,9 @@ CREATE TYPE "CommandType" AS ENUM ('TEXT_COMMAND', 'APPLICATION_COMMAND');
 -- CreateEnum
 CREATE TYPE "InfrastructureUsed" AS ENUM ('SERVERLESS', 'ENDPOINT');
 
+-- CreateEnum
+CREATE TYPE "PurchaseType" AS ENUM ('ONCE', 'RECURRING');
+
 -- CreateTable
 CREATE TABLE "command_cooldowns" (
     "userId" TEXT NOT NULL,
@@ -41,6 +44,7 @@ CREATE TABLE "auto_transcript_voice_messages" (
 -- CreateTable
 CREATE TABLE "jobs" (
     "id" TEXT NOT NULL,
+    "attachmentUrl" TEXT NOT NULL,
     "initialMessageId" TEXT NOT NULL,
     "responseMessageId" TEXT NOT NULL,
     "guildId" TEXT NOT NULL,
@@ -53,27 +57,8 @@ CREATE TABLE "jobs" (
 );
 
 -- CreateTable
-CREATE TABLE "premium_guilds" (
-    "guildId" TEXT NOT NULL,
-    "purchaserId" TEXT NOT NULL,
-
-    CONSTRAINT "premium_guilds_pkey" PRIMARY KEY ("guildId")
-);
-
--- CreateTable
-CREATE TABLE "premium_users" (
-    "userId" TEXT NOT NULL,
-    "expiresAt" TIMESTAMP(3) NOT NULL,
-
-    CONSTRAINT "premium_users_pkey" PRIMARY KEY ("userId")
-);
-
--- CreateTable
 CREATE TABLE "ignored_users" (
     "userId" TEXT NOT NULL,
 
     CONSTRAINT "ignored_users_pkey" PRIMARY KEY ("userId")
 );
-
--- AddForeignKey
-ALTER TABLE "premium_guilds" ADD CONSTRAINT "premium_guilds_purchaserId_fkey" FOREIGN KEY ("purchaserId") REFERENCES "premium_users"("userId") ON DELETE RESTRICT ON UPDATE CASCADE;

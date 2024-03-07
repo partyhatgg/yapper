@@ -113,27 +113,6 @@ export default {
 
 	TRANSCRIBE_COMMAND_NAME: "Transcribe",
 
-	PREMIUM_COMMAND_NAME: "premium",
-	PREMIUM_COMMAND_DESCRIPTION: "Manage Yapper premium.",
-	PREMIUM_COMMAND_INFO_SUB_COMMAND_NAME: "info",
-	PREMIUM_COMMAND_INFO_SUB_COMMAND_DESCRIPTION: "Get information about Yapper premium or subscribe.",
-	PREMIUM_COMMAND_APPLY_SUB_COMMAND_NAME: "apply",
-	PREMIUM_COMMAND_APPLY_SUB_COMMAND_DESCRIPTION: "Apply premium to the current server.",
-	PREMIUM_COMMAND_REMOVE_SUB_COMMAND_NAME: "remove",
-	PREMIUM_COMMAND_REMOVE_SUB_COMMAND_DESCRIPTION: "Remove premium from a server.",
-	PREMIUM_COMMAND_REMOVE_SUB_COMMAND_SERVER_OPTION_NAME: "server",
-	PREMIUM_COMMAND_REMOVE_SUB_COMMAND_SERVER_OPTION_DESCRIPTION:
-		"The server to remove premium from, defaults to the current server if not specified.",
-
-	PREMIUM_INFO_NO_PRODUCTS_TITLE: "No Products Available",
-	PREMIUM_INFO_NO_PRODUCTS_DESCRIPTION:
-		"There are currently no products available for purchase, thus Premium is unavailable.",
-
-	PREMIUM_INFO_TITLE: "Yapper Premium",
-	PREMIUM_INFO_DESCRIPTION:
-		"Yapper Premium offers transcriptions of audio and video attachments, removal of the five minute content length limit, as well as higher quality transcriptions. Subscribe to a plan by choosing one from the dropdown below!{{subscriptionInfo}}",
-	SUBSCRIPTION_INFO: `\n\nYou are currently subscribed to Yapper Premium and have {{appliedGuildCount}}/{{maxGuildCount}} active premium guilds. Your subscription will renew on {{date}}!`,
-
 	CONFIG_COMMAND_NAME: "config",
 	CONFIG_COMMAND_DESCRIPTION: "Configure Yapper for your server.",
 	CONFIG_COMMAND_AUTO_TRANSCRIPT_VOICE_MESSAGES_SUB_COMMAND_GROUP_NAME: "auto_transcript_voice_messages",
@@ -161,12 +140,6 @@ export default {
 	READ_MORE_BUTTON_LABEL: "Read More",
 	TRANSCRIBED_MESSAGE_BUTTON_LABEL: "Transcribed Message",
 
-	NOT_A_PREMIUM_GUILD_ERROR_TITLE: "Not A Premium Guild",
-	NOT_A_PREMIUM_GUILD_CONTEXT_MENU_ERROR_DESCRIPTION:
-		"This server is not a premium guild, please upgrade to premium to use context menus.",
-	NOT_A_PREMIUM_GUILD_FILES_ERROR_DESCRIPTION:
-		"This server is not a premium guild, please upgrade to premium to transcribe files.",
-
 	IGNORE_COMMAND_NAME: "ignore",
 	IGNORE_COMMAND_DESCRIPTION: "Have Yapper ignore any messages from you.",
 
@@ -180,17 +153,4 @@ export default {
 
 	NOT_A_GUILD_TITLE: "Not A Server",
 	NOT_A_GUILD_DESCRIPTION: "You can only use this command in a server!",
-
-	NOT_A_PREMIUM_USER_ERROR_TITLE: "Not A Premium User",
-	NOT_A_PREMIUM_USER_ERROR_DESCRIPTION: "You are not a premium user, please subscribe to premium to use this command.",
-
-	MAX_GUILD_COUNT_REACHED_ERROR_TITLE: "Max Guild Count Reached",
-	MAX_GUILD_COUNT_REACHED_ERROR_DESCRIPTION:
-		"You have reached your maximum guild count, please remove a guild from premium to add another.",
-
-	PREMIUM_APPLIED_TITLE: "Premium Applied",
-	PREMIUM_APPLIED_DESCRIPTION: "This server is now a premium guild!",
-
-	PREMIUM_REMOVED_TITLE: "Premium Removed",
-	PREMIUM_REMOVED_DESCRIPTION: "I have removed premium from the guild you've provided!",
 };

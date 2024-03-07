@@ -70,23 +70,6 @@ model Job {
     @@map("jobs")
 }
 
-model PremiumGuild {
-    guildId     String      @id
-    purchaserId String
-    purchaser   PremiumUser @relation(fields: [purchaserId], references: [userId])
-
-    @@map("premium_guilds")
-}
-
-model PremiumUser {
-    userId         String         @id
-    premiumGuilds  PremiumGuild[]
-    expiresAt      DateTime?
-    subscriptionId String
-
-    @@map("premium_users")
-}
-
 model IgnoredUser {
     userId String @id
 

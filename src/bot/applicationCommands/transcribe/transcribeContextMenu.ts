@@ -1,4 +1,4 @@
-import type { APIEmbed, APIMessageApplicationCommandInteraction } from "@discordjs/core";
+import type { APIMessageApplicationCommandInteraction } from "@discordjs/core";
 import { ApplicationCommandType, ButtonStyle, ComponentType, MessageFlags } from "@discordjs/core";
 import { InfrastructureUsed } from "@prisma/client";
 import ApplicationCommand from "../../../../lib/classes/ApplicationCommand.js";
@@ -22,40 +22,6 @@ export default class TranscribeContextMenu extends ApplicationCommand {
 				type: ApplicationCommandType.Message,
 			},
 		});
-	}
-
-	/**
-	 * Pre-check the provided interaction after validating it.
-	 *
-	 * @param options The options to pre-check.
-	 * @param options.interaction The interaction to pre-check.
-	 * @param options.language The language to use when replying to the interaction.
-	 * @param options.shardId The shard ID to use when replying to the interaction.
-	 * @returns A tuple containing a boolean and an APIEmbed if the interaction is invalid, a boolean if the interaction is valid.
-	 */
-	public override async preCheck({
-		interaction,
-		language,
-	}: {
-		interaction: APIInteractionWithArguments<APIMessageApplicationCommandInteraction>;
-		language: Language;
-		shardId: number;
-	}): Promise<[boolean, APIEmbed?]> {
-		const premiumGuild = await this.client.prisma.premiumGuild.findUnique({
-			where: { guildId: interaction.guild_id! },
-			include: { purchaser: true },
-		});
-
-		if ((premiumGuild?.purchaser.expiresAt?.getTime() ?? 0) < Date.now())
-			return [
-				false,
-				{
-					title: language.get("NOT_A_PREMIUM_GUILD_ERROR_TITLE"),
-					description: language.get("NOT_A_PREMIUM_GUILD_CONTEXT_MENU_ERROR_DESCRIPTION"),
-				},
-			];
-
-		return [true];
 	}
 
 	/**
