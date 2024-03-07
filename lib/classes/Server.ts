@@ -5,7 +5,6 @@ import { REST } from "@discordjs/rest";
 import { serve } from "@hono/node-server";
 import { InfrastructureUsed, PrismaClient } from "@prisma/client";
 import { Hono } from "hono";
-import Stripe from "stripe";
 import type { RunPodRunSyncResponse } from "../../typings/index.js";
 import Functions, { TranscriptionState } from "../utilities/functions.js";
 import Logger from "./Logger.js";
