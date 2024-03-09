@@ -92,9 +92,9 @@ export default {
 	MISSING_PERMISSIONS_USER_PERMISSIONS_OTHER_DESCRIPTION:
 		"You are missing the {{missingPermissions}} permissions, which are required to use this {{type}}!",
 	MISSING_PERMISSIONS_CLIENT_PERMISSIONS_ONE_DESCRIPTION:
-		"I are missing the {{missingPermissions}} permission, which I need to run this {{type}}!",
+		"I am missing the {{missingPermissions}} permission, which I need to run this {{type}}!",
 	MISSING_PERMISSIONS_CLIENT_PERMISSIONS_OTHER_DESCRIPTION:
-		"I are missing the {{missingPermissions}} permissions, which I need to run this {{type}}!",
+		"I am missing the {{missingPermissions}} permissions, which I need to run this {{type}}!",
 
 	TYPE_ON_COOLDOWN_TITLE: "{{type}} On Cooldown",
 	TYPE_ON_COOLDOWN_DESCRIPTION: "This {{type}} is on cooldown for another {{formattedTime}}!",
@@ -140,18 +140,26 @@ export default {
 	READ_MORE_BUTTON_LABEL: "Read More",
 	TRANSCRIBED_MESSAGE_BUTTON_LABEL: "Transcribed Message",
 
-	NOT_A_PREMIUM_GUILD_ERROR_TITLE: "Not A Premium Guild",
-	NOT_A_PREMIUM_GUILD_FILES_ERROR_DESCRIPTION:
-		"This server is not a premium guild, please upgrade to premium to transcribe files.",
-
 	IGNORE_COMMAND_NAME: "ignore",
-	IGNORE_COMMAND_DESCRIPTION: "Have Yapper ignore any messages from you.",
+	IGNORE_COMMAND_DESCRIPTION: "Configure how Yapper ignores users.",
+	IGNORE_COMMAND_CONTEXT_MENU_SUB_COMMAND_NAME: "context_menu",
+	IGNORE_COMMAND_CONTEXT_MENU_SUB_COMMAND_DESCRIPTION:
+		"Have Yapper ignore when someone else is trying to transcribe your messages with a context menu.",
+	IGNORE_COMMAND_AUTO_TRANSCRIPTION_SUB_COMMAND_NAME: "auto_transcription",
+	IGNORE_COMMAND_AUTO_TRANSCRIPTION_SUB_COMMAND_DESCRIPTION:
+		"Have Yapper ignore your messages when auto transcription is enabled.",
+	IGNORE_COMMAND_ALL_SUB_COMMAND_NAME: "all",
+	IGNORE_COMMAND_ALL_SUB_COMMAND_DESCRIPTION:
+		"Have Yapper ignore your messages completely (unless you use a context menu on your own messages).",
 
 	IGNORED_SUCCESSFULLY_TITLE: "Ignored Successfully",
-	IGNORED_SUCCESSFULLY_DESCRIPTION: "Yapper will now ignore any messages from you.",
+	IGNORED_SUCCESSFULLY_DESCRIPTION: "Yapper will now ignore messages from you.",
 
 	UNIGORED_SUCCESSFULLY_TITLE: "Unignored Successfully",
-	UNIGORED_SUCCESSFULLY_DESCRIPTION: "Yapper will no longer ignore any messages from you.",
+	UNIGORED_SUCCESSFULLY_DESCRIPTION: "Yapper will no longer ignore messages from you.",
 
 	USER_IS_IGNORED_ERROR: "This user has opted out of Yapper, their messages can not be transcribed.",
+
+	NOT_A_GUILD_TITLE: "Not A Server",
+	NOT_A_GUILD_DESCRIPTION: "You can only use this command in a server!",
 };

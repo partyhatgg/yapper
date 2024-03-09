@@ -24,7 +24,7 @@ const gateway = new WebSocketManager({
 	buildStrategy: (manager) => new WorkerShardingStrategy(manager, { shardsPerWorker: 3 }),
 });
 
-await new Server(Number.parseInt(env.FASTIFY_PORT, 10)).start();
+await new Server(Number.parseInt(env.WEB_PORT, 10)).start();
 
 const client = new ExtendedClient({ rest, gateway });
 await client.start();

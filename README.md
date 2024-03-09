@@ -16,6 +16,7 @@ postgresql://[user[:password]@][host][:port][/dbname]
 <details>
 <summary>Using Runpod</summary>
 <br>
+
 You will be asked for an `RUNPOD_API_KEY` and `RUNPOD_ENDPOINT_ID`. 
 
 From the [Runpod Console](https://runpod.io/console), select ["Serverless"](https://www.runpod.io/console/serverless), then ["Quick Deploy"](https://www.runpod.io/console/serverless/quick-deploy) and select "Faster Whisper". Runpod will recommend a 24 GB GPU, this is perfectly fine. However, feel free to switch to the "16 GB GPU".
@@ -25,6 +26,8 @@ Your `RUNPOD_ENDPOINT_ID` is under the name "Faster Whisper", or whatever custom
 
 Next, select ["Settings"](https://runpod.io/console/serverless/user/settings), expand "API Keys" and create a new API Key with "Read" permission. Write permission allows this API key to modify your account, which is likely not what you want. This is your `RUNPOD_API_KEY`.
 </details>
+
+Ready the Database with `pnpm prisma migrate dev`.
 
 To run the production version of this bot use `pnpm start`.
 

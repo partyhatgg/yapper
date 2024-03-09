@@ -1,10 +1,10 @@
-import { env, exit } from "node:process";
+import { env } from "node:process";
 import { setInterval } from "node:timers";
 import { API, ButtonStyle, ComponentType } from "@discordjs/core";
 import { REST } from "@discordjs/rest";
+import { serve } from "@hono/node-server";
 import { InfrastructureUsed, PrismaClient } from "@prisma/client";
-import type { FastifyInstance } from "fastify";
-import { fastify } from "fastify";
+import { Hono } from "hono";
 import type { RunPodRunSyncResponse } from "../../typings/index.js";
 import Functions, { TranscriptionState } from "../utilities/functions.js";
 import Logger from "./Logger.js";
@@ -16,9 +16,9 @@ export default class Server {
 	private readonly port: number;
 
 	/**
-	 * Our Fastify instance.
+	 * Our Hono instance.
 	 */
-	private readonly router: FastifyInstance;
+	private readonly router: Hono;
 
 	/**
 	 * Our Prisma client, this is an ORM to interact with our PostgreSQL instance.
@@ -47,14 +47,14 @@ export default class Server {
 	private readonly discordApi = new API(new REST({ version: "10" }).setToken(env.DISCORD_TOKEN));
 
 	/**
-	 * Create our Fastify server.
+	 * Create our Hono server.
 	 *
 	 * @param port The port the server should run on.
 	 */
 	public constructor(port: number) {
 		this.port = port;
 
-		this.router = fastify({ logger: false, trustProxy: 1 });
+		this.router = new Hono();
 
 		this.prisma = new PrismaClient({
 			errorFormat: "pretty",
@@ -111,15 +111,14 @@ export default class Server {
 		this.registerRoutes();
 
 		// eslint-disable-next-line promise/prefer-await-to-callbacks
-		this.router.listen({ port: this.port, host: "0.0.0.0" }, (error, address) => {
-			if (error) {
-				Logger.error(error);
-				Logger.sentry.captureException(error);
+		serve({ fetch: this.router.fetch, port: this.port }, (info) => {
+			// if (error) {
+			// 	Logger.error(error);
+			// 	Logger.sentry.captureException(error);
+			// 	exit(1);
+			// }
 
-				exit(1);
-			}
-
-			Logger.info(`Fastify server started, listening on ${address}.`);
+			Logger.info(`Hono server started, listening on ${info.address}.`);
 		});
 
 		setInterval(async () => {
@@ -153,30 +152,38 @@ export default class Server {
 	 * Register our routes.
 	 */
 	private registerRoutes() {
-		this.router.get("/ping", (_, response) => response.send("PONG!"));
+		this.router.get("/ping", (context) => context.text("PONG!"));
 
-		this.router.get("/", (_, response) => response.redirect("https://polar.blue"));
+		this.router.get("/", (context) => context.redirect("https://polar.blue"));
 
-		this.router.post("/job_complete", async (request, response) => {
-			// console.log(request);
-			const body: RunPodRunSyncResponse = typeof request.body === "string" ? JSON.parse(request.body) : request.body;
+		this.router.post("/job_complete", async (context) => {
+			let body: RunPodRunSyncResponse;
+
+			try {
+				body = await context.req.json();
+			} catch {
+				return context.json({ ack: true, runpod: false });
+			}
 
 			const job = await this.prisma.job.findUnique({ where: { id: body.id } });
 
-			if (!job) return response.status(400).send({ message: "Job not found." });
+			if (!job) {
+				context.status(400);
+				return context.json({ message: "Job not found." });
+			}
 
-			const [premiumGuild] = await Promise.all([
-				this.prisma.premiumGuild.findUnique({ where: { guildId: job.guildId }, include: { purchaser: true } }),
-				this.prisma.job.delete({ where: { id: job.id } }),
-			]);
+			await this.prisma.job.delete({ where: { id: job.id } });
 
 			if (body.output.transcription.length > 2_000) {
 				const message = job.interactionId
 					? await this.discordApi.interactions.getOriginalReply(env.APPLICATION_ID, job.interactionToken!)
 					: await this.discordApi.channels.getMessage(job.channelId!, job.initialMessageId);
 
-				const splitTranscription = body.output.transcription.match(/.{1,1999}/g);
-				if (!splitTranscription) return response.status(500).send({ message: "Failed to split transcription." });
+				const splitTranscription = body.output.transcription.match(/.{1,1997}/g);
+				if (!splitTranscription) {
+					context.status(500);
+					return context.json({ message: "Failed to split transcription." });
+				}
 
 				const threadName = `${(message.interaction?.user ?? message.author).username}${
 					(message.interaction?.user ?? message.author).discriminator === "0"
@@ -196,7 +203,7 @@ export default class Server {
 
 				if (job.interactionId)
 					await this.discordApi.interactions.editReply(env.APPLICATION_ID, job.interactionToken!, {
-						content: firstTranscription!.endsWith(" ") ? firstTranscription : `${firstTranscription}—`,
+						content: firstTranscription!.endsWith(" ") ? `🗣️ ${firstTranscription}` : `🗣️ ${firstTranscription}—`,
 						allowed_mentions: { parse: [] },
 						components: [
 							{
@@ -214,7 +221,7 @@ export default class Server {
 					});
 				else
 					await this.discordApi.channels.editMessage(job.channelId!, job.initialMessageId, {
-						content: firstTranscription!.endsWith(" ") ? firstTranscription : `${firstTranscription}—`,
+						content: firstTranscription!.endsWith(" ") ? `🗣️ ${firstTranscription}` : `🗣️ ${firstTranscription}—`,
 						allowed_mentions: { parse: [] },
 					});
 
@@ -222,14 +229,12 @@ export default class Server {
 					await this.discordApi.channels.createMessage(thread.id, {
 						content:
 							index === splitTranscription.length - 1 || splitTranscription[index]?.endsWith(" ")
-								? `${splitTranscription[index]}${
-										index === splitTranscription.length - 1 &&
-										body.output.model === "base" &&
-										(premiumGuild?.purchaser.expiresAt.getTime() ?? 0) > Date.now()
+								? `🗣️ ${splitTranscription[index]}${
+										index === splitTranscription.length - 1 && body.output.model === "base"
 											? "\n\n⚡ A higher quality message is currently being transcribed."
 											: ""
 								  }`
-								: `${splitTranscription[index]}—`,
+								: `🗣️ ${splitTranscription[index]}—`,
 						allowed_mentions: { parse: [] },
 						components:
 							index === splitTranscription.length - 1
@@ -250,7 +255,7 @@ export default class Server {
 					});
 				}
 
-				if (body.output.model === "base" && (premiumGuild?.purchaser.expiresAt.getTime() ?? 0) > Date.now()) {
+				if (body.output.model === "base") {
 					const newJob = await Functions.transcribeAudio(job.attachmentUrl, "serverless", "run", "large-v2");
 
 					await Promise.all([
@@ -296,10 +301,10 @@ export default class Server {
 						}),
 					]);
 
-				return response.status(200);
+				return context.text("Success");
 			}
 
-			if (body.output.model === "base" && (premiumGuild?.purchaser.expiresAt.getTime() ?? 0) > Date.now()) {
+			if (body.output.model === "base") {
 				const newJob = await Functions.transcribeAudio(job.attachmentUrl, "serverless", "run", "large-v2");
 
 				await Promise.all([
@@ -375,7 +380,7 @@ export default class Server {
 						  }),
 				]);
 
-			return response.status(200);
+			return context.text("Success");
 		});
 	}
 }

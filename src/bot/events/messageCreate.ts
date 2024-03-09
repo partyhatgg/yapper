@@ -23,7 +23,8 @@ export default class MessageCreate extends EventHandler {
 				where: { userId: message.author.id },
 			});
 
-			if (ignoredUser) return this.client.textCommandHandler.handleTextCommand({ data: message, shardId });
+			if (ignoredUser && (ignoredUser.type === "ALL" || ignoredUser?.type === "AUTO_TRANSCRIPTION"))
+				return this.client.textCommandHandler.handleTextCommand({ data: message, shardId });
 
 			const autoTranscriptionsEnabled = await this.client.prisma.autoTranscriptVoiceMessages.findUnique({
 				where: { guildId: message.guild_id },
@@ -35,16 +36,6 @@ export default class MessageCreate extends EventHandler {
 			const attachment = message.attachments.find((attachment) =>
 				this.client.config.allowedFileTypes.includes(attachment.content_type ?? ""),
 			)!;
-
-			if (attachment.duration_secs! > 60 * 5) {
-				const premiumGuild = await this.client.prisma.premiumGuild.findUnique({
-					where: { guildId: message.guild_id! },
-					include: { purchaser: true },
-				});
-
-				if ((premiumGuild?.purchaser.expiresAt.getTime() ?? 0) < Date.now())
-					return this.client.textCommandHandler.handleTextCommand({ data: message, shardId });
-			}
 
 			const responseMessage = await this.client.api.channels.createMessage(message.channel_id, {
 				content: ":writing_hand: Transcribing, this may take a moment...",

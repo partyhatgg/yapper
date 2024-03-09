@@ -352,7 +352,7 @@ export default class Functions {
 	 *
 	 * @param attachmentUrl The attachment to transcribe.
 	 * @param infrastructure The infrastructure to use. endpoint may put us in a queue and serverless may have 10+ seconds cold boot times.
-	 * @param endpointType The type of endpoint to use. run or runsync, run will return a job ID and state, runsync will try to return the transcription, if it fails to do so within 90 seconds then it will return a job ID and state.
+	 * @param endpointType Run will return a job ID and state, runsync will try to return the transcription, if it fails to do so within 90 seconds then it will return a job ID and state.
 	 * @param model The model to use for the transcription. Different models will have different accuracies and speeds.
 	 * @returns The job ID and state, or the transcription.
 	 */

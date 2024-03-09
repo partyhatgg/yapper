@@ -7,6 +7,7 @@ import { PrismaClient } from "@prisma/client";
 import * as metrics from "datadog-metrics";
 import i18next from "i18next";
 import intervalPlural from "i18next-intervalplural-postprocessor";
+import Stripe from "stripe";
 import Config from "../../config/bot.config.js";
 import type ApplicationCommand from "../classes/ApplicationCommand.js";
 import ApplicationCommandHandler from "../classes/ApplicationCommandHandler.js";
@@ -180,6 +181,11 @@ export default class ExtendedClient extends Client {
 	 */
 	public readonly dataDog?: typeof metrics;
 
+	/**
+	 * Our Stripe client
+	 */
+	public readonly stripe?: Stripe;
+
 	public constructor({ rest, gateway }: ClientOptions) {
 		super({ rest, gateway });
 
@@ -187,6 +193,7 @@ export default class ExtendedClient extends Client {
 
 		this.config = Config;
 		this.config.version =
+			// eslint-disable-next-line n/no-sync
 			execSync("git rev-parse HEAD").toString().trim().slice(0, 7) + env.NODE_ENV === "development" ? "dev" : "";
 
 		this.logger = Logger;
@@ -255,6 +262,10 @@ export default class ExtendedClient extends Client {
 				prefix: `${this.config.botName.toLowerCase().split(" ").join("_")}.`,
 				defaultTags: [`env:${env.NODE_ENV}`],
 			});
+		}
+
+		if (env.STRIPE_KEY) {
+			this.stripe = new Stripe(env.STRIPE_KEY);
 		}
 
 		this.i18n = i18next;

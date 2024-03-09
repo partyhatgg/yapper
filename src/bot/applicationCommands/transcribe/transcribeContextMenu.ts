@@ -1,4 +1,4 @@
-import type { APIEmbed, APIMessageApplicationCommandInteraction } from "@discordjs/core";
+import type { APIMessageApplicationCommandInteraction } from "@discordjs/core";
 import { ApplicationCommandType, ButtonStyle, ComponentType, MessageFlags } from "@discordjs/core";
 import { InfrastructureUsed } from "@prisma/client";
 import ApplicationCommand from "../../../../lib/classes/ApplicationCommand.js";
@@ -25,40 +25,6 @@ export default class TranscribeContextMenu extends ApplicationCommand {
 	}
 
 	/**
-	 * Pre-check the provided interaction after validating it.
-	 *
-	 * @param options The options to pre-check.
-	 * @param options.interaction The interaction to pre-check.
-	 * @param options.language The language to use when replying to the interaction.
-	 * @param options.shardId The shard ID to use when replying to the interaction.
-	 * @returns A tuple containing a boolean and an APIEmbed if the interaction is invalid, a boolean if the interaction is valid.
-	 */
-	public override async preCheck({
-		interaction,
-		language,
-	}: {
-		interaction: APIInteractionWithArguments<APIMessageApplicationCommandInteraction>;
-		language: Language;
-		shardId: number;
-	}): Promise<[boolean, APIEmbed?]> {
-		const premiumGuild = await this.client.prisma.premiumGuild.findUnique({
-			where: { guildId: interaction.guild_id! },
-			include: { purchaser: true },
-		});
-
-		if ((premiumGuild?.purchaser.expiresAt.getTime() ?? 0) < Date.now())
-			return [
-				false,
-				{
-					title: language.get("NOT_A_PREMIUM_GUILD_ERROR_TITLE"),
-					description: language.get("NOT_A_PREMIUM_GUILD_FILES_ERROR_DESCRIPTION"),
-				},
-			];
-
-		return [true];
-	}
-
-	/**
 	 * Run this application command.
 	 *
 	 * @param options - The options for this command.
@@ -74,22 +40,17 @@ export default class TranscribeContextMenu extends ApplicationCommand {
 		language: Language;
 		shardId: number;
 	}) {
-		if (
-			interaction.data.resolved.messages[interaction.data.target_id]?.attachments.every(
-				(attachment) => !this.client.config.allowedFileTypes.includes(attachment.content_type ?? ""),
-			)
-		)
-			return this.client.api.interactions.reply(interaction.id, interaction.token, {
-				content: language.get("NO_VALID_ATTACHMENTS_ERROR"),
-				allowed_mentions: { parse: [] },
-				flags: MessageFlags.Ephemeral,
-			});
+		const message = interaction.data.resolved.messages[interaction.data.target_id];
 
 		const ignoredUser = await this.client.prisma.ignoredUser.findUnique({
-			where: { userId: interaction.data.resolved.messages[interaction.data.target_id]!.author.id },
+			where: { userId: message!.author.id },
 		});
 
-		if (ignoredUser)
+		if (
+			ignoredUser &&
+			ignoredUser.userId !== (interaction.member?.user ?? interaction.user!).id &&
+			(ignoredUser.type === "ALL" || ignoredUser?.type === "CONTEXT_MENU")
+		)
 			return this.client.api.interactions.reply(interaction.id, interaction.token, {
 				content: language.get("USER_IS_IGNORED_ERROR"),
 				flags: MessageFlags.Ephemeral,
@@ -146,14 +107,28 @@ export default class TranscribeContextMenu extends ApplicationCommand {
 			});
 		}
 
+		let attachmentUrl = message!.attachments.find((attachment) =>
+			this.client.config.allowedFileTypes.includes(attachment.content_type ?? ""),
+		)?.url;
+
+		if (!attachmentUrl && message!.embeds?.[0]?.video?.url) {
+			attachmentUrl = message!.embeds[0].video.url;
+		}
+
+		if (
+			!attachmentUrl ||
+			["https://www.tiktok.com", "https://www.youtube.com"].some((url) => attachmentUrl?.startsWith(url))
+		)
+			return this.client.api.interactions.reply(interaction.id, interaction.token, {
+				content: language.get("NO_VALID_ATTACHMENTS_ERROR"),
+				allowed_mentions: { parse: [] },
+				flags: MessageFlags.Ephemeral,
+			});
+
 		await this.client.api.interactions.reply(interaction.id, interaction.token, {
 			content: language.get("TRANSCRIBING"),
 			allowed_mentions: { parse: [] },
 		});
-
-		const attachmentUrl = interaction.data.resolved.messages[interaction.data.target_id]!.attachments.find(
-			(attachment) => this.client.config.allowedFileTypes.includes(attachment.content_type ?? ""),
-		)!.url;
 
 		const [job, reply] = await Promise.all([
 			Functions.transcribeAudio(attachmentUrl, "endpoint", "run", "base"),
