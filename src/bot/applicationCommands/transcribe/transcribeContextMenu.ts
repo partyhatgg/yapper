@@ -107,11 +107,6 @@ export default class TranscribeContextMenu extends ApplicationCommand {
 			});
 		}
 
-		await this.client.api.interactions.reply(interaction.id, interaction.token, {
-			content: language.get("TRANSCRIBING"),
-			allowed_mentions: { parse: [] },
-		});
-
 		let attachmentUrl = message!.attachments.find((attachment) =>
 			this.client.config.allowedFileTypes.includes(attachment.content_type ?? ""),
 		)?.url;
@@ -129,6 +124,11 @@ export default class TranscribeContextMenu extends ApplicationCommand {
 				allowed_mentions: { parse: [] },
 				flags: MessageFlags.Ephemeral,
 			});
+
+		await this.client.api.interactions.reply(interaction.id, interaction.token, {
+			content: language.get("TRANSCRIBING"),
+			allowed_mentions: { parse: [] },
+		});
 
 		const [job, reply] = await Promise.all([
 			Functions.transcribeAudio(attachmentUrl, "endpoint", "run", "base"),
