@@ -1,5 +1,5 @@
 import type { APIApplicationCommandInteraction } from "@discordjs/core";
-import { ApplicationCommandOptionType, ApplicationCommandType } from "@discordjs/core";
+import { ApplicationCommandOptionType, ApplicationCommandType, MessageFlags } from "@discordjs/core";
 import type { IgnoreType } from "@prisma/client";
 import ApplicationCommand from "../../../../lib/classes/ApplicationCommand.js";
 import type Language from "../../../../lib/classes/Language.js";
@@ -84,6 +84,7 @@ export default class Ignore extends ApplicationCommand {
 							color: this.client.config.colors.success,
 						},
 					],
+					flags: MessageFlags.Ephemeral,
 					allowed_mentions: { parse: [], replied_user: true },
 				}),
 			]);
@@ -103,6 +104,7 @@ export default class Ignore extends ApplicationCommand {
 						color: this.client.config.colors.success,
 					},
 				],
+				flags: MessageFlags.Ephemeral,
 				allowed_mentions: { parse: [], replied_user: true },
 			}),
 		]);
