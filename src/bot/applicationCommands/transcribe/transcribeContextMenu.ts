@@ -45,7 +45,8 @@ export default class TranscribeContextMenu extends ApplicationCommand {
 		if (
 			message?.attachments.every(
 				(attachment) => !this.client.config.allowedFileTypes.includes(attachment.content_type ?? ""),
-			)
+			) ||
+			!message?.embeds?.[0]?.video?.url
 		)
 			return this.client.api.interactions.reply(interaction.id, interaction.token, {
 				content: language.get("NO_VALID_ATTACHMENTS_ERROR"),
