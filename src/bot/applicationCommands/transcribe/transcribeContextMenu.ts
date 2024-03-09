@@ -120,7 +120,10 @@ export default class TranscribeContextMenu extends ApplicationCommand {
 			attachmentUrl = message!.embeds[0].video.url;
 		}
 
-		if (!attachmentUrl)
+		if (
+			!attachmentUrl ||
+			["https://www.tiktok.com", "https://www.youtube.com"].some((url) => attachmentUrl?.startsWith(url))
+		)
 			return this.client.api.interactions.reply(interaction.id, interaction.token, {
 				content: language.get("NO_VALID_ATTACHMENTS_ERROR"),
 				allowed_mentions: { parse: [] },
