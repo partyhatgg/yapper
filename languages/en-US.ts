@@ -141,13 +141,22 @@ export default {
 	TRANSCRIBED_MESSAGE_BUTTON_LABEL: "Transcribed Message",
 
 	IGNORE_COMMAND_NAME: "ignore",
-	IGNORE_COMMAND_DESCRIPTION: "Have Yapper ignore any messages from you.",
+	IGNORE_COMMAND_DESCRIPTION: "Configure how Yapper ignores users.",
+	IGNORE_COMMAND_CONTEXT_MENU_SUB_COMMAND_NAME: "context_menu",
+	IGNORE_COMMAND_CONTEXT_MENU_SUB_COMMAND_DESCRIPTION:
+		"Have Yapper ignore when someone else is trying to transcribe your messages with a context menu.",
+	IGNORE_COMMAND_AUTO_TRANSCRIPTION_SUB_COMMAND_NAME: "auto_transcription",
+	IGNORE_COMMAND_AUTO_TRANSCRIPTION_SUB_COMMAND_DESCRIPTION:
+		"Have Yapper ignore your messages when auto transcription is enabled.",
+	IGNORE_COMMAND_ALL_SUB_COMMAND_NAME: "all",
+	IGNORE_COMMAND_ALL_SUB_COMMAND_DESCRIPTION:
+		"Have Yapper ignore your messages completely (unless you use a context menu on your own messages).",
 
 	IGNORED_SUCCESSFULLY_TITLE: "Ignored Successfully",
-	IGNORED_SUCCESSFULLY_DESCRIPTION: "Yapper will now ignore any messages from you.",
+	IGNORED_SUCCESSFULLY_DESCRIPTION: "Yapper will now ignore messages from you.",
 
 	UNIGORED_SUCCESSFULLY_TITLE: "Unignored Successfully",
-	UNIGORED_SUCCESSFULLY_DESCRIPTION: "Yapper will no longer ignore any messages from you.",
+	UNIGORED_SUCCESSFULLY_DESCRIPTION: "Yapper will no longer ignore messages from you.",
 
 	USER_IS_IGNORED_ERROR: "This user has opted out of Yapper, their messages can not be transcribed.",
 

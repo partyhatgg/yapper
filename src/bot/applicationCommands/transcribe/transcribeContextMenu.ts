@@ -40,8 +40,10 @@ export default class TranscribeContextMenu extends ApplicationCommand {
 		language: Language;
 		shardId: number;
 	}) {
+		const message = interaction.data.resolved.messages[interaction.data.target_id];
+
 		if (
-			interaction.data.resolved.messages[interaction.data.target_id]?.attachments.every(
+			message?.attachments.every(
 				(attachment) => !this.client.config.allowedFileTypes.includes(attachment.content_type ?? ""),
 			)
 		)
@@ -52,10 +54,14 @@ export default class TranscribeContextMenu extends ApplicationCommand {
 			});
 
 		const ignoredUser = await this.client.prisma.ignoredUser.findUnique({
-			where: { userId: interaction.data.resolved.messages[interaction.data.target_id]!.author.id },
+			where: { userId: message!.author.id },
 		});
 
-		if (ignoredUser)
+		if (
+			ignoredUser &&
+			ignoredUser.userId !== (interaction.member?.user ?? interaction.user!).id &&
+			(ignoredUser.type === "ALL" || ignoredUser?.type === "CONTEXT_MENU")
+		)
 			return this.client.api.interactions.reply(interaction.id, interaction.token, {
 				content: language.get("USER_IS_IGNORED_ERROR"),
 				flags: MessageFlags.Ephemeral,
@@ -117,9 +123,13 @@ export default class TranscribeContextMenu extends ApplicationCommand {
 			allowed_mentions: { parse: [] },
 		});
 
-		const attachmentUrl = interaction.data.resolved.messages[interaction.data.target_id]!.attachments.find(
-			(attachment) => this.client.config.allowedFileTypes.includes(attachment.content_type ?? ""),
+		let attachmentUrl = message!.attachments.find((attachment) =>
+			this.client.config.allowedFileTypes.includes(attachment.content_type ?? ""),
 		)!.url;
+
+		if (!attachmentUrl && message?.embeds?.[0]?.video?.url) {
+			attachmentUrl = message.embeds[0].video.url;
+		}
 
 		const [job, reply] = await Promise.all([
 			Functions.transcribeAudio(attachmentUrl, "endpoint", "run", "base"),

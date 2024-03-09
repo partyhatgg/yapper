@@ -23,6 +23,12 @@ enum PurchaseType {
     RECURRING
 }
 
+enum IgnoreType {
+    CONTEXT_MENU
+    AUTO_TRANSCRIPTION
+    ALL
+}
+
 model Cooldown {
     userId      String
     commandName String
@@ -71,7 +77,8 @@ model Job {
 }
 
 model IgnoredUser {
-    userId String @id
+    userId String     @id
+    type   IgnoreType
 
     @@map("ignored_users")
 }

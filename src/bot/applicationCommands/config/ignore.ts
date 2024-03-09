@@ -1,5 +1,6 @@
 import type { APIApplicationCommandInteraction } from "@discordjs/core";
-import { ApplicationCommandType } from "@discordjs/core";
+import { ApplicationCommandOptionType, ApplicationCommandType } from "@discordjs/core";
+import type { IgnoreType } from "@prisma/client";
 import ApplicationCommand from "../../../../lib/classes/ApplicationCommand.js";
 import type Language from "../../../../lib/classes/Language.js";
 import type ExtendedClient from "../../../../lib/extensions/ExtendedClient.js";
@@ -18,6 +19,29 @@ export default class Ignore extends ApplicationCommand {
 					name: "IGNORE_COMMAND_NAME",
 					description: "IGNORE_COMMAND_DESCRIPTION",
 				}),
+				options: [
+					{
+						...client.languageHandler.generateLocalizationsForApplicationCommandOptionType({
+							name: "IGNORE_COMMAND_CONTEXT_MENU_SUB_COMMAND_NAME",
+							description: "IGNORE_COMMAND_CONTEXT_MENU_SUB_COMMAND_DESCRIPTION",
+						}),
+						type: ApplicationCommandOptionType.Subcommand,
+					},
+					{
+						...client.languageHandler.generateLocalizationsForApplicationCommandOptionType({
+							name: "IGNORE_COMMAND_AUTO_TRANSCRIPTION_SUB_COMMAND_NAME",
+							description: "IGNORE_COMMAND_AUTO_TRANSCRIPTION_SUB_COMMAND_DESCRIPTION",
+						}),
+						type: ApplicationCommandOptionType.Subcommand,
+					},
+					{
+						...client.languageHandler.generateLocalizationsForApplicationCommandOptionType({
+							name: "IGNORE_COMMAND_ALL_SUB_COMMAND_NAME",
+							description: "IGNORE_COMMAND_ALL_SUB_COMMAND_DESCRIPTION",
+						}),
+						type: ApplicationCommandOptionType.Subcommand,
+					},
+				],
 				type: ApplicationCommandType.ChatInput,
 			},
 		});
@@ -45,10 +69,12 @@ export default class Ignore extends ApplicationCommand {
 			},
 		});
 
-		if (isAlreadyBlocked)
+		if (isAlreadyBlocked && isAlreadyBlocked.type === interaction.arguments.subCommand!.name.toUpperCase())
 			return Promise.all([
 				this.client.prisma.ignoredUser.delete({
-					where: { userId: (interaction.member?.user ?? interaction.user!).id! },
+					where: {
+						userId: (interaction.member?.user ?? interaction.user!).id!,
+					},
 				}),
 				this.client.api.interactions.reply(interaction.id, interaction.token, {
 					embeds: [
@@ -66,6 +92,7 @@ export default class Ignore extends ApplicationCommand {
 			this.client.prisma.ignoredUser.create({
 				data: {
 					userId: (interaction.member?.user ?? interaction.user!).id!,
+					type: interaction.arguments.subCommand!.name.toUpperCase() as IgnoreType,
 				},
 			}),
 			this.client.api.interactions.reply(interaction.id, interaction.token, {

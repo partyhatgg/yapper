@@ -23,7 +23,8 @@ export default class MessageCreate extends EventHandler {
 				where: { userId: message.author.id },
 			});
 
-			if (ignoredUser) return this.client.textCommandHandler.handleTextCommand({ data: message, shardId });
+			if (ignoredUser && (ignoredUser.type === "ALL" || ignoredUser?.type === "AUTO_TRANSCRIPTION"))
+				return this.client.textCommandHandler.handleTextCommand({ data: message, shardId });
 
 			const autoTranscriptionsEnabled = await this.client.prisma.autoTranscriptVoiceMessages.findUnique({
 				where: { guildId: message.guild_id },

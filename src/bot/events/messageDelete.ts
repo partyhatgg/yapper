@@ -36,7 +36,5 @@ export default class MessageDelete extends EventHandler {
 				transcription?.threadId ? this.client.api.channels.delete(transcription.threadId) : null,
 			]);
 		}
-
-		return null;
 	}
 }
