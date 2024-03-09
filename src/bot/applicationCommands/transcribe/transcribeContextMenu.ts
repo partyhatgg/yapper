@@ -42,18 +42,6 @@ export default class TranscribeContextMenu extends ApplicationCommand {
 	}) {
 		const message = interaction.data.resolved.messages[interaction.data.target_id];
 
-		if (
-			message?.attachments.every(
-				(attachment) => !this.client.config.allowedFileTypes.includes(attachment.content_type ?? ""),
-			) &&
-			!message?.embeds?.[0]?.video?.url
-		)
-			return this.client.api.interactions.reply(interaction.id, interaction.token, {
-				content: language.get("NO_VALID_ATTACHMENTS_ERROR"),
-				allowed_mentions: { parse: [] },
-				flags: MessageFlags.Ephemeral,
-			});
-
 		const ignoredUser = await this.client.prisma.ignoredUser.findUnique({
 			where: { userId: message!.author.id },
 		});
@@ -126,11 +114,18 @@ export default class TranscribeContextMenu extends ApplicationCommand {
 
 		let attachmentUrl = message!.attachments.find((attachment) =>
 			this.client.config.allowedFileTypes.includes(attachment.content_type ?? ""),
-		)!.url;
+		)?.url;
 
-		if (!attachmentUrl && message?.embeds?.[0]?.video?.url) {
-			attachmentUrl = message.embeds[0].video.url;
+		if (!attachmentUrl && message!.embeds?.[0]?.video?.url) {
+			attachmentUrl = message!.embeds[0].video.url;
 		}
+
+		if (!attachmentUrl)
+			return this.client.api.interactions.reply(interaction.id, interaction.token, {
+				content: language.get("NO_VALID_ATTACHMENTS_ERROR"),
+				allowed_mentions: { parse: [] },
+				flags: MessageFlags.Ephemeral,
+			});
 
 		const [job, reply] = await Promise.all([
 			Functions.transcribeAudio(attachmentUrl, "endpoint", "run", "base"),
