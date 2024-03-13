@@ -172,8 +172,6 @@ export default class Server {
 				return context.json({ message: "Job not found." });
 			}
 
-			await this.prisma.job.delete({ where: { id: job.id } });
-
 			if (body.output.transcription.length > 2_000) {
 				const message = job.interactionId
 					? await this.discordApi.interactions.getOriginalReply(env.APPLICATION_ID, job.interactionToken!)
@@ -182,6 +180,7 @@ export default class Server {
 				const splitTranscription = body.output.transcription.match(/.{1,1997}/g);
 				if (!splitTranscription) {
 					context.status(500);
+					await this.prisma.job.delete({ where: { id: job.id } });
 					return context.json({ message: "Failed to split transcription." });
 				}
 
@@ -255,6 +254,8 @@ export default class Server {
 					});
 				}
 
+				await this.prisma.job.delete({ where: { id: job.id } });
+
 				if (body.output.model === "base") {
 					const newJob = await Functions.transcribeAudio(job.attachmentUrl, "serverless", "run", "large-v2");
 
@@ -303,6 +304,8 @@ export default class Server {
 
 				return context.text("Success");
 			}
+
+			await this.prisma.job.delete({ where: { id: job.id } });
 
 			if (body.output.model === "base") {
 				const newJob = await Functions.transcribeAudio(job.attachmentUrl, "serverless", "run", "large-v2");
