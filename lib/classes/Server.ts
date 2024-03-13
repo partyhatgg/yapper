@@ -198,7 +198,7 @@ export default class Server {
 					{
 						name: threadName.length > 100 ? `${threadName.slice(0, 97)}...` : threadName,
 					},
-					job.id,
+					job.responseMessageId,
 				);
 
 				if (job.interactionId)
