@@ -43,7 +43,14 @@ export default class MessageCreate extends EventHandler {
 				allowed_mentions: { parse: [] },
 			});
 
-			const job = await Functions.transcribeAudio(attachment.url, "endpoint", "run", "base");
+			const endpointHealth = await Functions.getEndpointHealth();
+
+			const job = await Functions.transcribeAudio(
+				attachment.url,
+				"endpoint",
+				"run",
+				endpointHealth.workers.running > 0 ? "large-v3" : "base",
+			);
 
 			return this.client.prisma.job.create({
 				data: {

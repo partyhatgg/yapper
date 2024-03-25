@@ -257,7 +257,7 @@ export default class Server {
 				await this.prisma.job.delete({ where: { id: job.id } });
 
 				if (body.output.model === "base") {
-					const newJob = await Functions.transcribeAudio(job.attachmentUrl, "serverless", "run", "large-v2");
+					const newJob = await Functions.transcribeAudio(job.attachmentUrl, "serverless", "run", "large-v3");
 
 					await Promise.all([
 						this.prisma.transcription.upsert({
@@ -308,7 +308,7 @@ export default class Server {
 			await this.prisma.job.delete({ where: { id: job.id } });
 
 			if (body.output.model === "base") {
-				const newJob = await Functions.transcribeAudio(job.attachmentUrl, "serverless", "run", "large-v2");
+				const newJob = await Functions.transcribeAudio(job.attachmentUrl, "serverless", "run", "large-v3");
 
 				await Promise.all([
 					this.prisma.transcription.upsert({

@@ -285,7 +285,7 @@ export default class Functions {
 	 *
 	 * @returns The status of the RunPod endpoint.
 	 */
-	public async getEndpointHealth() {
+	public static async getEndpointHealth() {
 		const response = await fetch(`https://api.runpod.ai/v2/${env.RUNPOD_ENDPOINT_ID}/health`, {
 			method: "GET",
 			headers: {
@@ -360,7 +360,7 @@ export default class Functions {
 		attachmentUrl: string,
 		infrastructure: "endpoint" | "serverless",
 		endpointType: "run" | "runsync",
-		model: "base" | "large-v1" | "large-v2" | "medium" | "small" | "tiny",
+		model: "base" | "large-v1" | "large-v2" | "large-v3" | "medium" | "small" | "tiny",
 	) {
 		const response = await fetch(
 			`https://api.runpod.ai/v2/${

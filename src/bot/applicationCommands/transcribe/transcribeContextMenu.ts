@@ -130,8 +130,15 @@ export default class TranscribeContextMenu extends ApplicationCommand {
 			allowed_mentions: { parse: [] },
 		});
 
+		const endpointHealth = await Functions.getEndpointHealth();
+
 		const [job, reply] = await Promise.all([
-			Functions.transcribeAudio(attachmentUrl, "endpoint", "run", "base"),
+			Functions.transcribeAudio(
+				attachmentUrl,
+				"endpoint",
+				"run",
+				endpointHealth.workers.running > 0 ? "large-v3" : "base",
+			),
 			this.client.api.interactions.getOriginalReply(interaction.application_id, interaction.token),
 		]);
 
