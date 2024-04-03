@@ -1,7 +1,8 @@
 import { env } from "node:process";
 import { setInterval } from "node:timers";
-import { API, ButtonStyle, ComponentType } from "@discordjs/core";
-import { REST } from "@discordjs/rest";
+import type { APIChannel } from "@discordjs/core";
+import { API, ButtonStyle, ComponentType, RESTJSONErrorCodes } from "@discordjs/core";
+import { DiscordAPIError, REST } from "@discordjs/rest";
 import { serve } from "@hono/node-server";
 import { InfrastructureUsed, PrismaClient } from "@prisma/client";
 import { Hono } from "hono";
@@ -177,7 +178,7 @@ export default class Server {
 					? await this.discordApi.interactions.getOriginalReply(env.APPLICATION_ID, job.interactionToken!)
 					: await this.discordApi.channels.getMessage(job.channelId!, job.initialMessageId);
 
-				const splitTranscription = body.output.transcription.match(/.{1,1997}/g);
+				const splitTranscription = body.output.transcription.match(/.{1,1996}/g);
 				if (!splitTranscription) {
 					context.status(500);
 					await this.prisma.job.delete({ where: { id: job.id } });
@@ -192,13 +193,24 @@ export default class Server {
 
 				const firstTranscription = splitTranscription.shift();
 
-				const thread = await this.discordApi.channels.createThread(
-					job.channelId,
-					{
-						name: threadName.length > 100 ? `${threadName.slice(0, 97)}...` : threadName,
-					},
-					job.responseMessageId,
-				);
+				let thread: APIChannel;
+
+				try {
+					thread = await this.discordApi.channels.createThread(
+						job.channelId,
+						{
+							name: threadName.length > 100 ? `${threadName.slice(0, 97)}...` : threadName,
+						},
+						job.responseMessageId,
+					);
+				} catch (error) {
+					if (error instanceof DiscordAPIError && error.code === RESTJSONErrorCodes.ThreadAlreadyCreatedForMessage) {
+						const message = await this.discordApi.channels.getMessage(job.channelId!, job.responseMessageId);
+						thread = message.thread!;
+					}
+
+					throw error;
+				}
 
 				if (job.interactionId)
 					await this.discordApi.interactions.editReply(env.APPLICATION_ID, job.interactionToken!, {
