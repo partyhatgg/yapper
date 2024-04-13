@@ -50,6 +50,9 @@ dependencies:
   hono:
     specifier: ^3.11.12
     version: 3.11.12
+  husky:
+    specifier: ^8.0.3
+    version: 8.0.3
   i18next:
     specifier: ^22.4.14
     version: 22.5.1
@@ -106,9 +109,6 @@ devDependencies:
   eslint-plugin-prettier:
     specifier: ^4.2.1
     version: 4.2.1(eslint-config-prettier@8.10.0)(eslint@8.56.0)(prettier@2.8.8)
-  husky:
-    specifier: ^8.0.3
-    version: 8.0.3
   lint-staged:
     specifier: ^13.2.1
     version: 13.3.0
@@ -3225,7 +3225,7 @@ packages:
     resolution: {integrity: sha512-+dQSyqPh4x1hlO1swXBiNb2HzTDN1I2IGLQx1GrBuiqFJfoMrnZWwVmatvSiO+Iz8fBUnf+lekwNo4c2LlXItg==}
     engines: {node: '>=14'}
     hasBin: true
-    dev: true
+    dev: false
 
   /i18next-intervalplural-postprocessor@3.0.0:
     resolution: {integrity: sha512-ZJWg2Gcb0kQqVI7kygLj9wVwQHK3mzRAg94uLsdoHqss0M9n0HSPr1pThd2AttkBsJFWR26G18hnKCqcTB8shQ==}
