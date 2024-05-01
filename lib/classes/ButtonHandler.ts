@@ -79,7 +79,7 @@ export default class ButtonHandler {
 	}
 
 	/**
-	 * Handle a n interaction properly to ensure that it can invoke a button.
+	 * Handle an interaction properly to ensure that it can invoke a button.
 	 *
 	 * @param options The interaction that is attempted to invoke a button.
 	 * @param options.data The interaction data.

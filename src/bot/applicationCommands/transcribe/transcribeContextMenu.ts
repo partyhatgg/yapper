@@ -1,5 +1,12 @@
 import type { APIMessageApplicationCommandInteraction } from "@discordjs/core";
-import { ApplicationCommandType, ButtonStyle, ComponentType, MessageFlags } from "@discordjs/core";
+import {
+	ApplicationCommandType,
+	ApplicationIntegrationType,
+	ButtonStyle,
+	ComponentType,
+	InteractionContextType,
+	MessageFlags,
+} from "@discordjs/core";
 import { InfrastructureUsed } from "@prisma/client";
 import ApplicationCommand from "../../../../lib/classes/ApplicationCommand.js";
 import type Language from "../../../../lib/classes/Language.js";
@@ -20,6 +27,8 @@ export default class TranscribeContextMenu extends ApplicationCommand {
 					name: "TRANSCRIBE_COMMAND_NAME",
 				}),
 				type: ApplicationCommandType.Message,
+				integration_types: [ApplicationIntegrationType.GuildInstall, ApplicationIntegrationType.UserInstall],
+				contexts: [InteractionContextType.Guild, InteractionContextType.BotDM, InteractionContextType.PrivateChannel],
 			},
 		});
 	}

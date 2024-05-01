@@ -1,5 +1,10 @@
 import type { APIApplicationCommandInteraction } from "@discordjs/core";
-import { ApplicationCommandOptionType, ApplicationCommandType, PermissionFlagsBits } from "@discordjs/core";
+import {
+	ApplicationCommandOptionType,
+	ApplicationCommandType,
+	InteractionContextType,
+	PermissionFlagsBits,
+} from "@discordjs/core";
 import ApplicationCommand from "../../../../lib/classes/ApplicationCommand.js";
 import type Language from "../../../../lib/classes/Language.js";
 import type ExtendedClient from "../../../../lib/extensions/ExtendedClient.js";
@@ -45,9 +50,9 @@ export default class Config extends ApplicationCommand {
 						type: ApplicationCommandOptionType.SubcommandGroup,
 					},
 				],
-				dm_permission: false,
 				default_member_permissions: PermissionFlagsBits.ManageGuild.toString(),
 				type: ApplicationCommandType.ChatInput,
+				contexts: [InteractionContextType.Guild],
 			},
 		});
 	}

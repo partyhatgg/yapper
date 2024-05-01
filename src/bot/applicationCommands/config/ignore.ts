@@ -1,5 +1,10 @@
 import type { APIApplicationCommandInteraction } from "@discordjs/core";
-import { ApplicationCommandOptionType, ApplicationCommandType, MessageFlags } from "@discordjs/core";
+import {
+	ApplicationCommandOptionType,
+	ApplicationCommandType,
+	InteractionContextType,
+	MessageFlags,
+} from "@discordjs/core";
 import type { IgnoreType } from "@prisma/client";
 import ApplicationCommand from "../../../../lib/classes/ApplicationCommand.js";
 import type Language from "../../../../lib/classes/Language.js";
@@ -43,6 +48,7 @@ export default class Ignore extends ApplicationCommand {
 					},
 				],
 				type: ApplicationCommandType.ChatInput,
+				contexts: [InteractionContextType.Guild, InteractionContextType.BotDM, InteractionContextType.PrivateChannel],
 			},
 		});
 	}

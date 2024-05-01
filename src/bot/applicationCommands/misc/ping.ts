@@ -1,5 +1,5 @@
 import type { APIApplicationCommandInteraction } from "@discordjs/core";
-import { ApplicationCommandType, MessageFlags } from "@discordjs/core";
+import { ApplicationCommandType, InteractionContextType, MessageFlags } from "@discordjs/core";
 import { DiscordSnowflake } from "@sapphire/snowflake";
 import ApplicationCommand from "../../../../lib/classes/ApplicationCommand.js";
 import type Language from "../../../../lib/classes/Language.js";
@@ -20,6 +20,7 @@ export default class Ping extends ApplicationCommand {
 					description: "PING_COMMAND_DESCRIPTION",
 				}),
 				type: ApplicationCommandType.ChatInput,
+				contexts: [InteractionContextType.Guild],
 			},
 		});
 	}
