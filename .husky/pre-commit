@@ -1,4 +1,3 @@
-#!/bin/sh
-. "$(dirname "$0")/_/husky.sh"
-
+# sh will be used to run hooks
+# - husky docs
 npx lint-staged

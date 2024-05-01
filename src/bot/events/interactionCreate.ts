@@ -1,6 +1,11 @@
-import type { APIInteraction, WithIntrinsicProps } from "@discordjs/core";
-import { GatewayDispatchEvents, InteractionType } from "@discordjs/core";
-import { isMessageComponentButtonInteraction, isMessageComponentSelectMenuInteraction } from "discord-api-types/utils";
+import type {
+	APIInteraction,
+	WithIntrinsicProps,
+	APIMessageComponentButtonInteraction,
+	APIMessageComponentSelectMenuInteraction,
+	APIMessageComponentInteraction,
+} from "@discordjs/core";
+import { ComponentType, GatewayDispatchEvents, InteractionType } from "@discordjs/core";
 import EventHandler from "../../../lib/classes/EventHandler.js";
 import type ExtendedClient from "../../../lib/extensions/ExtendedClient.js";
 
@@ -49,4 +54,24 @@ export default class InteractionCreate extends EventHandler {
 				shardId,
 			});
 	}
+}
+
+// https://github.com/discordjs/discord-api-types/blob/189e91d62cb898b418ca11434280558d50948dd8/utils/v10.ts#L137-L159
+
+function isMessageComponentButtonInteraction(
+	interaction: APIMessageComponentInteraction,
+): interaction is APIMessageComponentButtonInteraction {
+	return interaction.data.component_type === ComponentType.Button;
+}
+
+function isMessageComponentSelectMenuInteraction(
+	interaction: APIMessageComponentInteraction,
+): interaction is APIMessageComponentSelectMenuInteraction {
+	return [
+		ComponentType.StringSelect,
+		ComponentType.UserSelect,
+		ComponentType.RoleSelect,
+		ComponentType.MentionableSelect,
+		ComponentType.ChannelSelect,
+	].includes(interaction.data.component_type);
 }
