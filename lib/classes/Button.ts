@@ -122,7 +122,7 @@ export default class Button {
 						type: "button",
 					}),
 				};
-		} else if (this.devOnly && !this.client.config.admins.includes((interaction.member?.user ?? interaction.user!).id))
+		} else if (this.devOnly && !this.client.config.admins.includes((interaction.member ?? interaction).user!.id))
 			return {
 				title: language.get("MISSING_PERMISSIONS_BASE_TITLE"),
 				description: language.get("MISSING_PERMISSIONS_DEVELOPER_ONLY_DESCRIPTION", {

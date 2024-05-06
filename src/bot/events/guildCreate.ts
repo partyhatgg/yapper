@@ -40,8 +40,11 @@ export default class GuildCreate extends EventHandler {
 				username: `${this.client.config.botName} | Console Logs`,
 				allowed_mentions: { parse: [] },
 			});
-		} else if (this.client.guildOwnersCache.get(data.id) !== data.owner_id)
+		}
+
+		if (this.client.guildOwnersCache.get(data.id) !== data.owner_id) {
 			return this.client.guildOwnersCache.set(data.id, data.owner_id);
+		}
 
 		return true;
 	}

@@ -81,7 +81,7 @@ export default class Server {
 						const value = paramsArray[Number(number) - 1];
 
 						if (typeof value === "string") return `"${value}"`;
-						else if (Array.isArray(value)) return `'${JSON.stringify(value)}'`;
+						if (Array.isArray(value)) return `'${JSON.stringify(value)}'`;
 
 						return String(value);
 					});
@@ -185,10 +185,10 @@ export default class Server {
 					return context.json({ message: "Failed to split transcription." });
 				}
 
-				const threadName = `${(message.interaction?.user ?? message.author).username}${
-					(message.interaction?.user ?? message.author).discriminator === "0"
+				const threadName = `${(message.interaction_metadata?.user ?? message.author).username}${
+					(message.interaction_metadata?.user ?? message.author).discriminator === "0"
 						? ""
-						: `#${(message.interaction?.user ?? message.author).discriminator}`
+						: `#${(message.interaction_metadata?.user ?? message.author).discriminator}`
 				}: ${body.output.transcription}`;
 
 				const firstTranscription = splitTranscription.shift();
@@ -244,7 +244,7 @@ export default class Server {
 										index === splitTranscription.length - 1 && body.output.model === "base"
 											? "\n\n⚡ A higher quality message is currently being transcribed."
 											: ""
-								  }`
+									}`
 								: `🗣️ ${splitTranscription[index]}—`,
 						allowed_mentions: { parse: [] },
 						components:
@@ -261,7 +261,7 @@ export default class Server {
 											],
 											type: ComponentType.ActionRow,
 										},
-								  ]
+									]
 								: [],
 					});
 				}
@@ -348,11 +348,11 @@ export default class Server {
 										type: ComponentType.ActionRow,
 									},
 								],
-						  })
+							})
 						: this.discordApi.channels.editMessage(job.channelId!, job.responseMessageId, {
 								content: `${body.output.transcription}\n\n⚡ A higher quality message is currently being transcribed.`,
 								allowed_mentions: { parse: [] },
-						  }),
+							}),
 					this.prisma.job.create({
 						data: {
 							...job,
@@ -361,7 +361,7 @@ export default class Server {
 						},
 					}),
 				]);
-			} else
+			} else {
 				await Promise.all([
 					this.prisma.transcription.upsert({
 						where: { initialMessageId: job.initialMessageId },
@@ -388,14 +388,15 @@ export default class Server {
 										type: ComponentType.ActionRow,
 									},
 								],
-						  })
+							})
 						: this.discordApi.channels.editMessage(job.channelId!, job.responseMessageId, {
 								content: body.output.transcription,
 								allowed_mentions: { parse: [] },
-						  }),
+							}),
 				]);
 
-			return context.text("Success");
+				return context.text("Success");
+			}
 		});
 	}
 }

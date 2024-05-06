@@ -168,7 +168,7 @@ export default class ApplicationCommandHandler {
 	 * @param register Whether or not to register the application commands after reloading them.
 	 * @returns The result of the registerApplicationCommands method if register is true, otherwise undefined.
 	 */
-	public async reloadApplicationCommands(register: boolean = true) {
+	public async reloadApplicationCommands(register = true) {
 		this.client.applicationCommands.clear();
 		await this.loadApplicationCommands();
 
@@ -200,7 +200,7 @@ export default class ApplicationCommandHandler {
 	}: Omit<WithIntrinsicProps<APIApplicationCommandInteraction>, "api">) {
 		const userLanguage = await this.client.prisma.userLanguage.findUnique({
 			where: {
-				userId: (interaction.member?.user ?? interaction.user!).id,
+				userId: (interaction.member ?? interaction).user!.id,
 			},
 		});
 		const language = this.client.languageHandler.getLanguage(userLanguage?.languageId ?? interaction.locale);
@@ -212,7 +212,7 @@ export default class ApplicationCommandHandler {
 				null,
 				`${(interaction.member?.user ?? interaction.user!).username}#${
 					(interaction.member?.user ?? interaction.user!).discriminator
-				} [${(interaction.member?.user ?? interaction.user!).id}] invoked application command ${
+				} [${(interaction.member ?? interaction).user!.id}] invoked application command ${
 					interaction.data.name
 				} but it does not exist.`,
 			);
@@ -390,7 +390,7 @@ export default class ApplicationCommandHandler {
 		shardId: number,
 		language: Language,
 	) {
-		if (this.cooldowns.has((interaction.member?.user ?? interaction.user!).id))
+		if (this.cooldowns.has((interaction.member ?? interaction).user!.id))
 			return this.client.api.interactions.reply(interaction.id, interaction.token, {
 				embeds: [
 					{
@@ -415,7 +415,7 @@ export default class ApplicationCommandHandler {
 			});
 
 			if (applicationCommand.cooldown)
-				await applicationCommand.applyCooldown((interaction.member?.user ?? interaction.user!).id);
+				await applicationCommand.applyCooldown((interaction.member ?? interaction).user!.id);
 
 			this.client.dataDog?.increment("command_used", 1, [
 				`command:${applicationCommand.name}`,
@@ -463,7 +463,7 @@ export default class ApplicationCommandHandler {
 			}
 		}
 
-		this.cooldowns.add((interaction.member?.user ?? interaction.user!).id);
-		setTimeout(() => this.cooldowns.delete((interaction.member?.user ?? interaction.user!).id), this.coolDownTime);
+		this.cooldowns.add((interaction.member ?? interaction).user!.id);
+		setTimeout(() => this.cooldowns.delete((interaction.member ?? interaction).user!.id), this.coolDownTime);
 	}
 }

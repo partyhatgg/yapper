@@ -30,29 +30,34 @@ export default class InteractionCreate extends EventHandler {
 		]);
 
 		this.client.dataDog?.increment("user_locales", 1, [
-			`locale:${(data.member?.user ?? data.user!).locale ?? this.client.languageHandler.defaultLanguage!.id}`,
+			`locale:${(data.member ?? data).user?.locale ?? this.client.languageHandler.defaultLanguage?.id}`,
 			`shard:${shardId}`,
 		]);
 
-		if (data.type === InteractionType.ApplicationCommand)
+		if (data.type === InteractionType.ApplicationCommand) {
 			return this.client.applicationCommandHandler.handleApplicationCommand({
 				data,
 				shardId,
 			});
-		else if (data.type === InteractionType.ApplicationCommandAutocomplete)
+		}
+
+		if (data.type === InteractionType.ApplicationCommandAutocomplete) {
 			return this.client.autoCompleteHandler.handleAutoComplete({
 				data,
 				shardId,
 			});
-		else if (data.type === InteractionType.MessageComponent) {
+		}
+
+		if (data.type === InteractionType.MessageComponent) {
 			if (isMessageComponentButtonInteraction(data)) return this.client.buttonHandler.handleButton({ data, shardId });
-			else if (isMessageComponentSelectMenuInteraction(data))
+			if (isMessageComponentSelectMenuInteraction(data))
 				return this.client.selectMenuHandler.handleSelectMenu({ data, shardId });
-		} else if (data.type === InteractionType.ModalSubmit)
+		} else if (data.type === InteractionType.ModalSubmit) {
 			return this.client.modalHandler.handleModal({
 				data,
 				shardId,
 			});
+		}
 	}
 }
 

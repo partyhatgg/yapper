@@ -4,7 +4,6 @@ import {
 	ApplicationIntegrationType,
 	ButtonStyle,
 	ComponentType,
-	InteractionContextType,
 	MessageFlags,
 } from "@discordjs/core";
 import { InfrastructureUsed } from "@prisma/client";
@@ -28,7 +27,6 @@ export default class TranscribeContextMenu extends ApplicationCommand {
 				}),
 				type: ApplicationCommandType.Message,
 				integration_types: [ApplicationIntegrationType.GuildInstall, ApplicationIntegrationType.UserInstall],
-				contexts: [InteractionContextType.Guild, InteractionContextType.BotDM, InteractionContextType.PrivateChannel],
 			},
 		});
 	}
@@ -51,13 +49,15 @@ export default class TranscribeContextMenu extends ApplicationCommand {
 	}) {
 		const message = interaction.data.resolved.messages[interaction.data.target_id];
 
+		if (!message) return; // doesnt matter
+
 		const ignoredUser = await this.client.prisma.ignoredUser.findUnique({
-			where: { userId: message!.author.id },
+			where: { userId: message.author.id },
 		});
 
 		if (
 			ignoredUser &&
-			ignoredUser.userId !== (interaction.member?.user ?? interaction.user!).id &&
+			ignoredUser.userId !== interaction.user?.id &&
 			(ignoredUser.type === "ALL" || ignoredUser?.type === "CONTEXT_MENU")
 		)
 			return this.client.api.interactions.reply(interaction.id, interaction.token, {
@@ -75,7 +75,7 @@ export default class TranscribeContextMenu extends ApplicationCommand {
 			this.client.prisma.job.findFirst({
 				where: {
 					initialMessageId: interaction.data.target_id,
-					guildId: interaction.guild_id!,
+					guildId: interaction.guild_id ?? "@me",
 				},
 			}),
 		]);
@@ -108,7 +108,9 @@ export default class TranscribeContextMenu extends ApplicationCommand {
 				],
 				allowed_mentions: { parse: [] },
 			});
-		} else if (jobExists) {
+		}
+
+		if (jobExists) {
 			return this.client.api.interactions.reply(interaction.id, interaction.token, {
 				content: language.get("MESSAGE_STILL_BEING_TRANSCRIBED_ERROR"),
 				flags: MessageFlags.Ephemeral,
@@ -116,12 +118,12 @@ export default class TranscribeContextMenu extends ApplicationCommand {
 			});
 		}
 
-		let attachmentUrl = message!.attachments.find((attachment) =>
+		let attachmentUrl = message.attachments.find((attachment) =>
 			this.client.config.allowedFileTypes.includes(attachment.content_type ?? ""),
 		)?.url;
 
-		if (!attachmentUrl && message!.embeds?.[0]?.video?.url) {
-			attachmentUrl = message!.embeds[0].video.url;
+		if (!attachmentUrl && message.embeds?.[0]?.video?.url) {
+			attachmentUrl = message.embeds[0].video.url;
 		}
 
 		if (
@@ -157,7 +159,7 @@ export default class TranscribeContextMenu extends ApplicationCommand {
 				infrastructureUsed: InfrastructureUsed.ENDPOINT,
 				attachmentUrl,
 				channelId: interaction.channel.id,
-				guildId: interaction.guild_id!,
+				guildId: interaction.guild_id ?? "@me",
 				interactionId: interaction.id,
 				interactionToken: interaction.token,
 				initialMessageId: interaction.data.target_id,

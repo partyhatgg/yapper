@@ -1,10 +1,5 @@
 import type { APIApplicationCommandInteraction } from "@discordjs/core";
-import {
-	ApplicationCommandOptionType,
-	ApplicationCommandType,
-	InteractionContextType,
-	MessageFlags,
-} from "@discordjs/core";
+import { ApplicationCommandOptionType, ApplicationCommandType, MessageFlags } from "@discordjs/core";
 import type { IgnoreType } from "@prisma/client";
 import ApplicationCommand from "../../../../lib/classes/ApplicationCommand.js";
 import type Language from "../../../../lib/classes/Language.js";
@@ -48,7 +43,6 @@ export default class Ignore extends ApplicationCommand {
 					},
 				],
 				type: ApplicationCommandType.ChatInput,
-				contexts: [InteractionContextType.Guild, InteractionContextType.BotDM, InteractionContextType.PrivateChannel],
 			},
 		});
 	}
@@ -71,15 +65,15 @@ export default class Ignore extends ApplicationCommand {
 	}) {
 		const isAlreadyBlocked = await this.client.prisma.ignoredUser.findUnique({
 			where: {
-				userId: (interaction.member?.user ?? interaction.user!).id!,
+				userId: (interaction.member ?? interaction).user!.id,
 			},
 		});
 
-		if (isAlreadyBlocked && isAlreadyBlocked.type === interaction.arguments.subCommand!.name.toUpperCase())
+		if (isAlreadyBlocked && isAlreadyBlocked.type === interaction.arguments.subCommand?.name.toUpperCase())
 			return Promise.all([
 				this.client.prisma.ignoredUser.delete({
 					where: {
-						userId: (interaction.member?.user ?? interaction.user!).id!,
+						userId: (interaction.member ?? interaction).user!.id,
 					},
 				}),
 				this.client.api.interactions.reply(interaction.id, interaction.token, {
@@ -98,8 +92,8 @@ export default class Ignore extends ApplicationCommand {
 		return Promise.all([
 			this.client.prisma.ignoredUser.create({
 				data: {
-					userId: (interaction.member?.user ?? interaction.user!).id!,
-					type: interaction.arguments.subCommand!.name.toUpperCase() as IgnoreType,
+					userId: (interaction.member ?? interaction).user!.id,
+					type: interaction.arguments.subCommand?.name.toUpperCase() as IgnoreType,
 				},
 			}),
 			this.client.api.interactions.reply(interaction.id, interaction.token, {

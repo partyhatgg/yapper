@@ -186,17 +186,14 @@ export default class ApplicationCommand {
 
 			const guildOwnerId = this.client.guildOwnersCache.get(interaction.guild_id);
 
-			if (guildOwnerId !== (interaction.member?.user ?? interaction.user!).id)
+			if (guildOwnerId !== (interaction.member ?? interaction).user!.id)
 				return {
 					title: language.get("MISSING_PERMISSIONS_BASE_TITLE"),
 					description: language.get("MISSING_PERMISSIONS_OWNER_ONLY_DESCRIPTION", {
 						type,
 					}),
 				};
-		} else if (
-			this.devOnly &&
-			!this.client.config.admins.includes((interaction.member?.user ?? interaction.user!).id || "")
-		)
+		} else if (this.devOnly && !this.client.config.admins.includes((interaction.member ?? interaction).user!.id || ""))
 			return {
 				title: language.get("MISSING_PERMISSIONS_BASE_TITLE"),
 				description: language.get("MISSING_PERMISSIONS_DEVELOPER_ONLY_DESCRIPTION", {
@@ -237,9 +234,7 @@ export default class ApplicationCommand {
 						throw error;
 					}
 
-				if (
-					(interaction.member?.user ?? interaction.user!).id !== this.client.guildOwnersCache.get(interaction.guild_id)
-				)
+				if ((interaction.member ?? interaction).user!.id !== this.client.guildOwnersCache.get(interaction.guild_id))
 					return {
 						title: language.get("MISSING_PERMISSIONS_BASE_TITLE"),
 						description: language.get(
@@ -320,7 +315,7 @@ export default class ApplicationCommand {
 					commandName_commandType_userId: {
 						commandName: this.name,
 						commandType: "APPLICATION_COMMAND",
-						userId: (interaction.member?.user ?? interaction.user!).id,
+						userId: (interaction.member ?? interaction).user!.id,
 					},
 				},
 			});
