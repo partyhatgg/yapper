@@ -5,7 +5,7 @@ import type {
 	APIMessageComponentSelectMenuInteraction,
 	APIMessageComponentInteraction,
 } from "@discordjs/core";
-import { ComponentType, GatewayDispatchEvents, InteractionType } from "@discordjs/core";
+import { ComponentType, GatewayDispatchEvents, InteractionContextType, InteractionType } from "@discordjs/core";
 import EventHandler from "../../../lib/classes/EventHandler.js";
 import type ExtendedClient from "../../../lib/extensions/ExtendedClient.js";
 
@@ -26,6 +26,7 @@ export default class InteractionCreate extends EventHandler {
 		this.client.dataDog?.increment("interactions_created", 1, [
 			`name:${dd.name ?? dd.custom_id ?? "null"}`,
 			`type:${data.type.toString()}`,
+			`context:${data.context ? InteractionContextType[data.context] : "UNKNOWN"}`,
 			`shard:${shardId}`,
 		]);
 
