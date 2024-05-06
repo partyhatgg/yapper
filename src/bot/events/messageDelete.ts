@@ -29,7 +29,9 @@ export default class MessageDelete extends EventHandler {
 				this.client.prisma.job.delete({ where: { id: job.id } }),
 				this.client.api.channels.deleteMessage(message.channel_id, job.responseMessageId),
 			]);
-		} else if (transcription) {
+		}
+
+		if (transcription) {
 			return Promise.all([
 				this.client.prisma.transcription.delete({ where: { initialMessageId: message.id } }),
 				this.client.api.channels.deleteMessage(message.channel_id, transcription.responseMessageId),

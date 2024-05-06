@@ -23,15 +23,17 @@ export default class MessageCreate extends EventHandler {
 				where: { userId: message.author.id },
 			});
 
-			if (ignoredUser && (ignoredUser.type === "ALL" || ignoredUser?.type === "AUTO_TRANSCRIPTION"))
+			if (ignoredUser && (ignoredUser.type === "ALL" || ignoredUser?.type === "AUTO_TRANSCRIPTION")) {
 				return this.client.textCommandHandler.handleTextCommand({ data: message, shardId });
+			}
 
 			const autoTranscriptionsEnabled = await this.client.prisma.autoTranscriptVoiceMessages.findUnique({
 				where: { guildId: message.guild_id },
 			});
 
-			if (!autoTranscriptionsEnabled)
+			if (!autoTranscriptionsEnabled) {
 				return this.client.textCommandHandler.handleTextCommand({ data: message, shardId });
+			}
 
 			const attachment = message.attachments.find((attachment) =>
 				this.client.config.allowedFileTypes.includes(attachment.content_type ?? ""),
@@ -58,7 +60,7 @@ export default class MessageCreate extends EventHandler {
 					attachmentUrl: attachment.url,
 					infrastructureUsed: InfrastructureUsed.ENDPOINT,
 					channelId: message.channel_id,
-					guildId: message.guild_id!,
+					guildId: message.guild_id ?? "@me",
 					initialMessageId: message.id,
 					responseMessageId: responseMessage.id,
 				},

@@ -1,10 +1,5 @@
 import type { APIApplicationCommandInteraction } from "@discordjs/core";
-import {
-	ApplicationCommandOptionType,
-	ApplicationCommandType,
-	InteractionContextType,
-	PermissionFlagsBits,
-} from "@discordjs/core";
+import { ApplicationCommandOptionType, ApplicationCommandType, PermissionFlagsBits } from "@discordjs/core";
 import ApplicationCommand from "../../../../lib/classes/ApplicationCommand.js";
 import type Language from "../../../../lib/classes/Language.js";
 import type ExtendedClient from "../../../../lib/extensions/ExtendedClient.js";
@@ -52,7 +47,6 @@ export default class Config extends ApplicationCommand {
 				],
 				default_member_permissions: PermissionFlagsBits.ManageGuild.toString(),
 				type: ApplicationCommandType.ChatInput,
-				contexts: [InteractionContextType.Guild],
 			},
 		});
 	}
@@ -74,21 +68,21 @@ export default class Config extends ApplicationCommand {
 		shardId: number;
 	}) {
 		if (
-			interaction.arguments.subCommandGroup!.name ===
-			this.client.languageHandler.defaultLanguage!.get(
+			interaction.arguments.subCommandGroup?.name ===
+			this.client.languageHandler.defaultLanguage?.get(
 				"CONFIG_COMMAND_AUTO_TRANSCRIPT_VOICE_MESSAGES_SUB_COMMAND_GROUP_NAME",
 			)
 		) {
 			if (
-				interaction.arguments.subCommand!.name ===
-				this.client.languageHandler.defaultLanguage!.get(
+				interaction.arguments.subCommand?.name ===
+				this.client.languageHandler.defaultLanguage?.get(
 					"CONFIG_COMMAND_AUTO_TRANSCRIPT_VOICE_MESSAGES_SUB_COMMAND_GROUP_ENABLE_SUB_COMMAND_NAME",
 				)
 			)
 				return Promise.all([
 					this.client.prisma.autoTranscriptVoiceMessages.upsert({
-						where: { guildId: interaction.guild_id! },
-						create: { guildId: interaction.guild_id! },
+						where: { guildId: interaction.guild_id ?? "@me" },
+						create: { guildId: interaction.guild_id ?? "@me" },
 						update: {},
 					}),
 					this.client.api.interactions.reply(interaction.id, interaction.token, {
@@ -105,7 +99,7 @@ export default class Config extends ApplicationCommand {
 
 			return Promise.all([
 				this.client.prisma.autoTranscriptVoiceMessages.deleteMany({
-					where: { guildId: interaction.guild_id! },
+					where: { guildId: interaction.guild_id ?? "@me" },
 				}),
 				this.client.api.interactions.reply(interaction.id, interaction.token, {
 					embeds: [

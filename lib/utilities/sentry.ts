@@ -44,7 +44,7 @@ export default function init(): typeof Sentry & {
 					scope.setExtra("Environment", env.NODE_ENV);
 					scope.setUser({
 						username: (interaction.member?.user ?? interaction.user!).username,
-						id: (interaction.member?.user ?? interaction.user!).id,
+						id: (interaction.member ?? interaction).user!.id,
 					});
 					scope.setExtra("Interaction", format(interaction));
 

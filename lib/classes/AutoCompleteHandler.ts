@@ -136,7 +136,7 @@ export default class AutoCompleteHandler {
 		if (!autoComplete) return;
 
 		const userLanguage = await this.client.prisma.userLanguage.findUnique({
-			where: { userId: (interaction.member?.user ?? interaction.user!).id },
+			where: { userId: (interaction.member ?? interaction).user!.id },
 		});
 		const language = this.client.languageHandler.getLanguage(userLanguage?.languageId ?? interaction.locale);
 

@@ -5,7 +5,7 @@ import type {
 	APIMessageComponentSelectMenuInteraction,
 	APIMessageComponentInteraction,
 } from "@discordjs/core";
-import { ComponentType, GatewayDispatchEvents, InteractionType } from "@discordjs/core";
+import { ComponentType, GatewayDispatchEvents, InteractionContextType, InteractionType } from "@discordjs/core";
 import EventHandler from "../../../lib/classes/EventHandler.js";
 import type ExtendedClient from "../../../lib/extensions/ExtendedClient.js";
 
@@ -26,33 +26,39 @@ export default class InteractionCreate extends EventHandler {
 		this.client.dataDog?.increment("interactions_created", 1, [
 			`name:${dd.name ?? dd.custom_id ?? "null"}`,
 			`type:${data.type.toString()}`,
+			`context:${data.context ? InteractionContextType[data.context] : "UNKNOWN"}`,
 			`shard:${shardId}`,
 		]);
 
 		this.client.dataDog?.increment("user_locales", 1, [
-			`locale:${(data.member?.user ?? data.user!).locale ?? this.client.languageHandler.defaultLanguage!.id}`,
+			`locale:${(data.member ?? data).user?.locale ?? this.client.languageHandler.defaultLanguage?.id}`,
 			`shard:${shardId}`,
 		]);
 
-		if (data.type === InteractionType.ApplicationCommand)
+		if (data.type === InteractionType.ApplicationCommand) {
 			return this.client.applicationCommandHandler.handleApplicationCommand({
 				data,
 				shardId,
 			});
-		else if (data.type === InteractionType.ApplicationCommandAutocomplete)
+		}
+
+		if (data.type === InteractionType.ApplicationCommandAutocomplete) {
 			return this.client.autoCompleteHandler.handleAutoComplete({
 				data,
 				shardId,
 			});
-		else if (data.type === InteractionType.MessageComponent) {
+		}
+
+		if (data.type === InteractionType.MessageComponent) {
 			if (isMessageComponentButtonInteraction(data)) return this.client.buttonHandler.handleButton({ data, shardId });
-			else if (isMessageComponentSelectMenuInteraction(data))
+			if (isMessageComponentSelectMenuInteraction(data))
 				return this.client.selectMenuHandler.handleSelectMenu({ data, shardId });
-		} else if (data.type === InteractionType.ModalSubmit)
+		} else if (data.type === InteractionType.ModalSubmit) {
 			return this.client.modalHandler.handleModal({
 				data,
 				shardId,
 			});
+		}
 	}
 }
 

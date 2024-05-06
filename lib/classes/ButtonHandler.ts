@@ -91,7 +91,7 @@ export default class ButtonHandler {
 	}: Omit<WithIntrinsicProps<APIMessageComponentButtonInteraction>, "api">) {
 		const userLanguage = await this.client.prisma.userLanguage.findUnique({
 			where: {
-				userId: (interaction.member?.user ?? interaction.user!).id,
+				userId: (interaction.member ?? interaction).user!.id,
 			},
 		});
 		const language = this.client.languageHandler.getLanguage(userLanguage?.languageId ?? interaction.locale);
@@ -155,7 +155,7 @@ export default class ButtonHandler {
 		shardId: number,
 		language: Language,
 	) {
-		if (this.cooldowns.has((interaction.member?.user ?? interaction.user!).id))
+		if (this.cooldowns.has((interaction.member ?? interaction).user!.id)) {
 			return this.client.api.interactions.reply(interaction.id, interaction.token, {
 				embeds: [
 					{
@@ -171,6 +171,7 @@ export default class ButtonHandler {
 				flags: MessageFlags.Ephemeral,
 				allowed_mentions: { parse: [], replied_user: true },
 			});
+		}
 
 		try {
 			await button.run({
@@ -203,15 +204,19 @@ export default class ButtonHandler {
 				await this.client.api.interactions.reply(interaction.id, interaction.token, toSend);
 				return;
 			} catch (error) {
-				if (error instanceof DiscordAPIError && error.code === RESTJSONErrorCodes.InteractionHasAlreadyBeenAcknowledged)
+				if (
+					error instanceof DiscordAPIError &&
+					error.code === RESTJSONErrorCodes.InteractionHasAlreadyBeenAcknowledged
+				) {
 					return this.client.api.interactions.followUp(interaction.application_id, interaction.token, toSend);
+				}
 
 				await this.client.logger.sentry.captureWithInteraction(error, interaction);
 				throw error;
 			}
 		}
 
-		this.cooldowns.add((interaction.member?.user ?? interaction.user!).id);
-		setTimeout(() => this.cooldowns.delete((interaction.member?.user ?? interaction.user!).id), this.coolDownTime);
+		this.cooldowns.add((interaction.member ?? interaction).user!.id);
+		setTimeout(() => this.cooldowns.delete((interaction.member ?? interaction).user!.id), this.coolDownTime);
 	}
 }
