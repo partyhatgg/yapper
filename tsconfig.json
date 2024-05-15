@@ -13,6 +13,7 @@
 		"strict": true,
 		"useUnknownInCatchVariables": true,
 		"noUncheckedIndexedAccess": true,
+		"skipLibCheck": true,
 
 		// Modules
 		"module": "ESNext",
@@ -35,7 +36,7 @@
 		// Language and Environment, we use DOM here because of fetch.
 		"experimentalDecorators": true,
 		"lib": ["ESNext", "DOM"],
-		"target": "ES2021",
+		"target": "ES2022",
 		"useDefineForClassFields": true
 	}
 }
