@@ -1,3 +1,4 @@
+import { execSync } from "node:child_process";
 import { env } from "node:process";
 import type { GatewayPresenceUpdateData } from "@discordjs/core";
 import { ActivityType, GatewayIntentBits, PermissionFlagsBits } from "@discordjs/core";
@@ -7,6 +8,7 @@ export default {
 	 * The prefix the bot will use for text commands, the prefix is different depending on the NODE_ENV.
 	 */
 	prefixes: env.NODE_ENV === "production" ? ["y!"] : ["y!!"],
+
 	/**
 	 * The name the bot should use across the bot.
 	 */
@@ -18,9 +20,10 @@ export default {
 	allowedFileTypes: ["audio/ogg", "audio/mpeg", "video/mp4", "video/webm", "video/quicktime"],
 
 	/**
-	 * The bot's current version, this is the first 7 characters from the current Git commit hash.
+	 * The bot's current version, this is the first 7 characters of the current Git commit hash.
 	 */
-	version: "???",
+	version: env.NODE_ENV === "production" ? execSync("git rev-parse --short HEAD").toString().trim() : "dev",
+
 	/**
 	 * A list of users that are marked as administrators of the bot, these users have access to eval commands.
 	 */
