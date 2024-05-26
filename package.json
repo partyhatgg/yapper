@@ -44,7 +44,7 @@
 	"devDependencies": {
 		"@sentry/types": "^7.113.0",
 		"@types/got": "^9.6.12",
-		"@types/node": "18.20.2",
+		"@types/node": "20.12.2",
 		"@typescript-eslint/eslint-plugin": "^7.8.0",
 		"@typescript-eslint/parser": "^7.8.0",
 		"cross-env": "^7.0.3",
@@ -63,10 +63,7 @@
 	},
 	"pnpm": {
 		"overrides": {
-			"discord-api-types": "file:../discord-api-types"
+			"discord-api-types": "0.37.84-next.c457b8d.1715776908"
 		}
-	},
-	"trustedDependencies": [
-		"discord-api-types"
-	]
+	}
 }
