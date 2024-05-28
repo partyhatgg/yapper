@@ -58,7 +58,7 @@ export default class Functions {
 	 * @param createDirectoryIfNotFound Whether or not the directory we want to search for should be created if it doesn't already exist.
 	 * @returns The files within the directory.
 	 */
-	public getFiles(directory: string, fileExtension: string, createDirectoryIfNotFound: boolean = false) {
+	public getFiles(directory: string, fileExtension: string, createDirectoryIfNotFound = false) {
 		if (createDirectoryIfNotFound && !existsSync(directory)) mkdirSync(directory);
 
 		return readdirSync(directory).filter((file) => file.endsWith(fileExtension));
@@ -113,7 +113,7 @@ export default class Functions {
 						(number === 1 ? `${type}_ONE` : `${type}_OTHER`).toUpperCase() as Uppercase<
 							`${typeof type}_ONE` | `${typeof type}_OTHER`
 						>,
-				  )}`
+					)}`
 				: language.get(`${type}_SHORT`.toUpperCase() as Uppercase<`${typeof type}_SHORT`>)
 		}`;
 	}
@@ -126,7 +126,7 @@ export default class Functions {
 	 * @param language The language to use for formatting.
 	 * @returns The formatting count.
 	 */
-	public format(milli: number, long: boolean = true, language?: Language) {
+	public format(milli: number, long = true, language?: Language) {
 		if (!language) language = this.client.languageHandler.defaultLanguage!;
 
 		const prefix = milli < 0 ? "-" : "";

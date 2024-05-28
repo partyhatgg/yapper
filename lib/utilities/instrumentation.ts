@@ -1,7 +1,6 @@
 import { env } from "node:process";
 import { format } from "node:util";
 import type { APIInteraction, APIMessage } from "@discordjs/core";
-import { DiagConsoleLogger, DiagLogLevel, diag } from "@opentelemetry/api";
 import { OTLPMetricExporter } from "@opentelemetry/exporter-metrics-otlp-grpc";
 import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-grpc";
 import { dockerCGroupV1Detector } from "@opentelemetry/resource-detector-docker";
@@ -12,7 +11,7 @@ import { SEMRESATTRS_SERVICE_NAME, SEMRESATTRS_SERVICE_VERSION } from "@opentele
 import PrismaInstrumentation from "@prisma/instrumentation";
 import * as Sentry from "@sentry/node";
 import type { HonoRequest } from "hono";
-import botConfig from "../../config/bot.config";
+import botConfig from "../../config/bot.config.js";
 
 function initSentry(): typeof Sentry & {
 	captureWithExtras(error: any, extras: Record<string, any>): Promise<string>;

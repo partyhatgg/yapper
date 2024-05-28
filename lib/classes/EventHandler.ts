@@ -29,7 +29,7 @@ export default class EventHandler {
 	 * @param name The name of our event, this is what we will use to listen to the event.
 	 * @param once Whether or not this event should only be handled once.
 	 */
-	public constructor(client: ExtendedClient, name: keyof MappedEvents, once: boolean = false) {
+	public constructor(client: ExtendedClient, name: keyof MappedEvents, once = false) {
 		this.name = name;
 		this.client = client;
 		this.once = once;

@@ -1,4 +1,3 @@
-import { execSync } from "node:child_process";
 import { resolve } from "node:path";
 import { env } from "node:process";
 import type { APIGuildMember, APIRole, ClientOptions, MappedEvents } from "@discordjs/core";
@@ -192,9 +191,6 @@ export default class ExtendedClient extends Client {
 		this.api = new API(rest);
 
 		this.config = Config;
-		this.config.version =
-			// eslint-disable-next-line n/no-sync
-			execSync("git rev-parse HEAD").toString().trim().slice(0, 7) + env.NODE_ENV === "development" ? "dev" : "";
 
 		this.logger = Logger;
 		this.functions = new Functions(this);
