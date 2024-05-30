@@ -27,6 +27,7 @@ export default class TranscribeContextMenu extends ApplicationCommand {
 				}),
 				type: ApplicationCommandType.Message,
 				integration_types: [ApplicationIntegrationType.GuildInstall, ApplicationIntegrationType.UserInstall],
+				contexts: [0, 1, 2],
 			},
 		});
 	}
