@@ -11,7 +11,7 @@ import ApplicationCommand from "../../../../lib/classes/ApplicationCommand.js";
 import type Language from "../../../../lib/classes/Language.js";
 import type ExtendedClient from "../../../../lib/extensions/ExtendedClient.js";
 import Functions from "../../../../lib/utilities/functions.js";
-import type { APIInteractionWithArguments } from "../../../../typings/index.js";
+import type { APIInteractionWithArguments } from "../../../../typings/index";
 
 export default class TranscribeContextMenu extends ApplicationCommand {
 	/**
@@ -27,6 +27,7 @@ export default class TranscribeContextMenu extends ApplicationCommand {
 				}),
 				type: ApplicationCommandType.Message,
 				integration_types: [ApplicationIntegrationType.GuildInstall, ApplicationIntegrationType.UserInstall],
+				contexts: [0, 1, 2],
 			},
 		});
 	}
@@ -144,12 +145,9 @@ export default class TranscribeContextMenu extends ApplicationCommand {
 		const endpointHealth = await Functions.getEndpointHealth();
 
 		const [job, reply] = await Promise.all([
-			Functions.transcribeAudio(
-				attachmentUrl,
-				"endpoint",
-				"run",
-				endpointHealth.workers.running > 0 ? "large-v3" : "base",
-			),
+			endpointHealth.workers.running <= 0
+				? Functions.transcribeAudio(attachmentUrl)
+				: Functions.transcribeAudioRunPod(attachmentUrl, "run", "large-v3"),
 			this.client.api.interactions.getOriginalReply(interaction.application_id, interaction.token),
 		]);
 

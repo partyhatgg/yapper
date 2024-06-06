@@ -47,18 +47,19 @@ export default class MessageCreate extends EventHandler {
 
 			const endpointHealth = await Functions.getEndpointHealth();
 
-			const job = await Functions.transcribeAudio(
-				attachment.url,
-				"endpoint",
-				"run",
-				endpointHealth.workers.running > 0 ? "large-v3" : "base",
-			);
+			let job;
+
+			if (endpointHealth.workers.running <= 0) {
+				job = await Functions.transcribeAudio(attachment.url);
+			} else {
+				job = await Functions.transcribeAudioRunPod(attachment.url, "run", "large-v3");
+			}
 
 			return this.client.prisma.job.create({
 				data: {
 					id: job.id,
 					attachmentUrl: attachment.url,
-					infrastructureUsed: InfrastructureUsed.ENDPOINT,
+					infrastructureUsed: "transcription" in job ? InfrastructureUsed.CHATTER : InfrastructureUsed.SERVERLESS,
 					channelId: message.channel_id,
 					guildId: message.guild_id ?? "@me",
 					initialMessageId: message.id,

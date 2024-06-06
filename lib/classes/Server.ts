@@ -8,7 +8,7 @@ import { InfrastructureUsed, PrismaClient } from "@prisma/client";
 import * as metrics from "datadog-metrics";
 import { Hono } from "hono";
 import botConfig from "../../config/bot.config.js";
-import type { RunPodRunSyncResponse } from "../../typings/index.js";
+import type { ChatterRunSyncResponse, RunPodRunSyncResponse } from "../../typings/index.js";
 import Functions, { TranscriptionState } from "../utilities/functions.js";
 import Logger from "./Logger.js";
 
@@ -147,10 +147,7 @@ export default class Server {
 			return Promise.all(
 				jobs
 					.map(async (job) => {
-						const jobStatus = await Functions.getJobStatus(
-							job.id,
-							job.infrastructureUsed.toLowerCase() as "endpoint" | "serverless",
-						);
+						const jobStatus = await Functions.getJobStatus(job);
 
 						if (!jobStatus) return this.prisma.job.delete({ where: { id: job.id } });
 
@@ -177,7 +174,7 @@ export default class Server {
 		this.router.get("/", (context) => context.redirect("https://polar.blue"));
 
 		this.router.post("/job_complete", async (context) => {
-			let body: RunPodRunSyncResponse;
+			let body: ChatterRunSyncResponse | RunPodRunSyncResponse;
 
 			try {
 				body = await context.req.json();
@@ -289,8 +286,8 @@ export default class Server {
 
 				await this.prisma.job.delete({ where: { id: job.id } });
 
-				if (body.output.model === "base") {
-					const newJob = await Functions.transcribeAudio(job.attachmentUrl, "serverless", "run", "large-v3");
+				if (body.output.model === "medium") {
+					const newJob = await Functions.transcribeAudioRunPod(job.attachmentUrl, "run", "large-v3");
 
 					await Promise.all([
 						this.prisma.transcription.upsert({
@@ -316,7 +313,7 @@ export default class Server {
 							},
 						}),
 					]);
-				} else
+				} else {
 					await Promise.all([
 						this.prisma.transcription.upsert({
 							where: { initialMessageId: job.initialMessageId },
@@ -334,14 +331,15 @@ export default class Server {
 							archived: true,
 						}),
 					]);
+				}
 
 				return context.text("Success");
 			}
 
 			await this.prisma.job.delete({ where: { id: job.id } });
 
-			if (body.output.model === "base") {
-				const newJob = await Functions.transcribeAudio(job.attachmentUrl, "serverless", "run", "large-v3");
+			if (body.output.model === "medium") {
+				const newJob = await Functions.transcribeAudioRunPod(job.attachmentUrl, "run", "large-v3");
 
 				await Promise.all([
 					this.prisma.transcription.upsert({

@@ -1,11 +1,18 @@
+/* eslint-disable n/no-sync */
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readdirSync } from "node:fs";
 import { env } from "node:process";
 import Config from "../../config/bot.config.js";
-import { type RunPodHealthResponse, type RunPodRunResponse, type RunPodRunSyncResponse } from "../../typings/index.js";
+import type {
+	ChatterRunSyncResponse,
+	RunPodHealthResponse,
+	RunPodRunSyncResponse,
+	RunResponse,
+} from "../../typings/index.js";
 import type Language from "../classes/Language.js";
 import Logger from "../classes/Logger.js";
 import type ExtendedClient from "../extensions/ExtendedClient.js";
+import { InfrastructureUsed, Job } from "@prisma/client";
 
 export enum TranscriptionState {
 	CANCELLED = "CANCELLED",
@@ -58,7 +65,7 @@ export default class Functions {
 	 * @param createDirectoryIfNotFound Whether or not the directory we want to search for should be created if it doesn't already exist.
 	 * @returns The files within the directory.
 	 */
-	public getFiles(directory: string, fileExtension: string, createDirectoryIfNotFound: boolean = false) {
+	public getFiles(directory: string, fileExtension: string, createDirectoryIfNotFound = false) {
 		if (createDirectoryIfNotFound && !existsSync(directory)) mkdirSync(directory);
 
 		return readdirSync(directory).filter((file) => file.endsWith(fileExtension));
@@ -113,7 +120,7 @@ export default class Functions {
 						(number === 1 ? `${type}_ONE` : `${type}_OTHER`).toUpperCase() as Uppercase<
 							`${typeof type}_ONE` | `${typeof type}_OTHER`
 						>,
-				  )}`
+					)}`
 				: language.get(`${type}_SHORT`.toUpperCase() as Uppercase<`${typeof type}_SHORT`>)
 		}`;
 	}
@@ -126,7 +133,7 @@ export default class Functions {
 	 * @param language The language to use for formatting.
 	 * @returns The formatting count.
 	 */
-	public format(milli: number, long: boolean = true, language?: Language) {
+	public format(milli: number, long = true, language?: Language) {
 		if (!language) language = this.client.languageHandler.defaultLanguage!;
 
 		const prefix = milli < 0 ? "-" : "";
@@ -298,103 +305,135 @@ export default class Functions {
 	}
 
 	/**
-	 * Get the status of a RunPod job.
+	 * Get the status of a Chatter job.
 	 *
 	 * @param jobId The job ID to get the status of.
-	 * @param infrastructure The infrastructure this job was run on.
-	 * @returns The status of the RunPod job.
+	 * @returns The status of the Chatter job.
 	 */
-	public static async getJobStatus(jobId: string, infrastructure: "endpoint" | "serverless") {
-		const response = await fetch(
-			`https://api.runpod.ai/v2/${
-				infrastructure === "serverless" ? env.RUNPOD_ENDPOINT_ID : "faster-whisper"
-			}/status/${jobId}`,
-			{
-				method: "GET",
-				headers: {
-					"Content-Type": "application/json",
-					Authorization: `Bearer ${env.RUNPOD_API_KEY}`,
-				},
+	public static async getChatterJobStatus(jobId: string) {
+		const response = await fetch(`${env.CHATTER_URL}/job/${jobId}`, {
+			method: "GET",
+			headers: {
+				"Content-Type": "application/json",
+				Authorization: `${env.CHATTER_API_KEY}`,
 			},
-		);
+		});
 
 		if (response.status !== 200) return null;
 
-		return response.json() as Promise<RunPodRunResponse | RunPodRunSyncResponse>;
+		return response.json() as Promise<ChatterRunSyncResponse | RunResponse>;
+	}
+
+	/**
+	 * Get the status of a RunPod job.
+	 *
+	 * @param jobId The job ID to get the status of.
+	 * @returns The status of the RunPod job.
+	 */
+	public static async getRunpodJobStatus(jobId: string) {
+		const response = await fetch(`https://api.runpod.ai/v2/${env.RUNPOD_ENDPOINT_ID}/status/${jobId}`, {
+			method: "GET",
+			headers: {
+				"Content-Type": "application/json",
+				Authorization: `Bearer ${env.RUNPOD_API_KEY}`,
+			},
+		});
+
+		if (response.status !== 200) return null;
+
+		return response.json() as Promise<RunPodRunSyncResponse | RunResponse>;
+	}
+
+	/**
+	 * Get the status of a job whose source you do not know.
+	 *
+	 * @param job The Prisma Job to get a status of
+	 * @returns The respective platform status response.
+	 */
+	public static async getJobStatus(job: Job): Promise<RunResponse | null> {
+		let res;
+		if (job.infrastructureUsed === InfrastructureUsed.SERVERLESS) {
+			res = await this.getRunpodJobStatus(job.id);
+		} else {
+			res = await this.getChatterJobStatus(job.id);
+		}
+
+		return res;
 	}
 
 	/**
 	 * Cancel a RunPod job.
 	 *
 	 * @param jobId The job ID to cancel.
-	 * @param infrastructure The infrastructure this job was run on.
 	 * @returns The status of the RunPod job.
 	 */
-	public async cancelJob(jobId: string, infrastructure: "endpoint" | "serverless") {
-		const response = await fetch(
-			`https://api.runpod.ai/v2/${
-				infrastructure === "serverless" ? env.RUNPOD_ENDPOINT_ID : "faster-whisper"
-			}/cancel/${jobId}`,
-			{
-				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
-					Authorization: `Bearer ${env.RUNPOD_API_KEY}`,
-				},
+	public async cancelJob(jobId: string) {
+		const response = await fetch(`https://api.runpod.ai/v2/${env.RUNPOD_ENDPOINT_ID}/cancel/${jobId}`, {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+				Authorization: `Bearer ${env.RUNPOD_API_KEY}`,
 			},
-		);
+		});
 
-		return response.json() as Promise<RunPodRunResponse & { status: TranscriptionState.CANCELLED }>;
+		return response.json() as Promise<RunResponse & { status: TranscriptionState.CANCELLED }>;
+	}
+
+	/**
+	 * Transcribe an attachment using Chatter
+	 *
+	 * @param attachmentUrl The attachment to transcribe.
+	 */
+	public static async transcribeAudio(attachmentUrl: string) {
+		const response = await fetch(`${env.CHATTER_URL}/transcribe`, {
+			method: "POST",
+			body: JSON.stringify({
+				url: attachmentUrl,
+			}),
+			headers: {
+				"Content-Type": "application/json",
+				Authorization: `${env.CHATTER_API_KEY}`,
+			},
+		});
+
+		const data: RunResponse = await response.json();
+
+		return data;
 	}
 
 	/**
 	 * Transcribe an attachment using RunPod.
 	 *
 	 * @param attachmentUrl The attachment to transcribe.
-	 * @param infrastructure The infrastructure to use. endpoint may put us in a queue and serverless may have 10+ seconds cold boot times.
 	 * @param endpointType Run will return a job ID and state, runsync will try to return the transcription, if it fails to do so within 90 seconds then it will return a job ID and state.
 	 * @param model The model to use for the transcription. Different models will have different accuracies and speeds.
 	 * @returns The job ID and state, or the transcription.
 	 */
-	public static async transcribeAudio(
+	public static async transcribeAudioRunPod(
 		attachmentUrl: string,
-		infrastructure: "endpoint" | "serverless",
 		endpointType: "run" | "runsync",
 		model: "base" | "large-v1" | "large-v2" | "large-v3" | "medium" | "small" | "tiny",
 	) {
-		const response = await fetch(
-			`https://api.runpod.ai/v2/${
-				infrastructure === "serverless" ? env.RUNPOD_ENDPOINT_ID : "faster-whisper"
-			}/${endpointType}`,
-			{
-				method: "POST",
-				body: JSON.stringify({
-					input: {
-						audio: attachmentUrl,
-						model,
-						transcription: "plain_text",
-						translate: true,
-						temperature: 0,
-						best_of: 5,
-						beam_size: 5,
-						patience: 1,
-						suppress_tokens: "-1",
-						temperature_increment_on_fallback: 0.2,
-						compression_ratio_threshold: 2.4,
-						logprob_threshold: -1,
-						no_speech_threshold: 0.6,
-					},
-					enable_vad: false,
-					webhook: `${env.BASE_URL}/job_complete${env.SECRET}`,
-				}),
-				headers: {
-					"Content-Type": "application/json",
-					Authorization: `Bearer ${env.RUNPOD_API_KEY}`,
+		const response = await fetch(`https://api.runpod.ai/v2/${env.RUNPOD_ENDPOINT_ID}/${endpointType}`, {
+			method: "POST",
+			body: JSON.stringify({
+				input: {
+					audio: attachmentUrl,
+					model,
+					transcription: "plain_text",
+					translate: true,
+					temperature: 0,
 				},
+				enable_vad: false,
+				webhook: `${env.BASE_URL}/job_complete${env.SECRET}`,
+			}),
+			headers: {
+				"Content-Type": "application/json",
+				Authorization: `Bearer ${env.RUNPOD_API_KEY}`,
 			},
-		);
+		});
 
-		const data: RunPodRunResponse = await response.json();
+		const data: RunResponse = await response.json();
 
 		if (endpointType === "runsync" && data.status === TranscriptionState.COMPLETED) {
 			const typedData = data as RunPodRunSyncResponse;

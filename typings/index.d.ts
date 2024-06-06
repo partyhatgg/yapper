@@ -37,12 +37,21 @@ export type APIInteractionWithArguments<T> = T & {
 	arguments: InteractionArguments;
 };
 
-export interface RunPodRunResponse {
+export interface RunResponse {
 	id: string;
 	status: TranscriptionState;
 }
 
-export interface RunPodRunSyncResponse extends RunPodRunResponse {
+export interface ChatterRunSyncResponse extends RunResponse {
+	output: {
+		detected_language: string;
+		device: string;
+		model: string;
+		transcription: string;
+	};
+}
+
+export interface RunPodRunSyncResponse extends RunResponse {
 	delayTime: number;
 	executionTime: number;
 	output: {
