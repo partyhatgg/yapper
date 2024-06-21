@@ -5,6 +5,7 @@ settings:
   excludeLinksFromLockfile: false
 
 overrides:
+  discord-api-types: 0.37.90
   '@discordjs/ws': dev
 
 importers:
@@ -1175,9 +1176,6 @@ packages:
   dir-glob@3.0.1:
     resolution: {integrity: sha512-WkrWp9GR4KXfKGYzOLmTuGVi1UWFfws377n9cc55/tb6DuqyF6pcQ5AbiHEshaDpY9v6oaSr2XCDidGmMwdzIA==}
     engines: {node: '>=8'}
-
-  discord-api-types@0.37.83:
-    resolution: {integrity: sha512-urGGYeWtWNYMKnYlZnOnDHm8fVRffQs3U0SpE8RHeiuLKb/u92APS8HoQnPTFbnXmY1vVnXjXO4dOxcAn3J+DA==}
 
   discord-api-types@0.37.90:
     resolution: {integrity: sha512-lpOJSGrqHuXoM4FV/2HtjoaJpCClGFHpRNIdZEW8zPINlsCHNSfIwA2EQ8dxeE6k1QhhTuM9ZlOGVYXoU7FLgA==}
@@ -3233,7 +3231,7 @@ snapshots:
       '@discordjs/ws': 1.1.2-dev.1718755818-ba0cb66ff(bufferutil@4.0.8)(utf-8-validate@6.0.4)
       '@sapphire/snowflake': 3.5.3
       '@vladfrangu/async_event_emitter': 2.2.4
-      discord-api-types: 0.37.83
+      discord-api-types: 0.37.90
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
@@ -3245,7 +3243,7 @@ snapshots:
       '@sapphire/async-queue': 1.5.2
       '@sapphire/snowflake': 3.5.3
       '@vladfrangu/async_event_emitter': 2.2.4
-      discord-api-types: 0.37.83
+      discord-api-types: 0.37.90
       magic-bytes.js: 1.10.0
       tslib: 2.6.2
       undici: 6.13.0
@@ -4257,8 +4255,6 @@ snapshots:
   dir-glob@3.0.1:
     dependencies:
       path-type: 4.0.0
-
-  discord-api-types@0.37.83: {}
 
   discord-api-types@0.37.90: {}
 

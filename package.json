@@ -61,6 +61,7 @@
 	},
 	"pnpm": {
 		"overrides": {
+			"discord-api-types": "0.37.90",
 			"@discordjs/ws": "dev"
 		}
 	}
