@@ -1,5 +1,6 @@
 import type { GatewayMessageDeleteDispatchData, WithIntrinsicProps } from "@discordjs/core";
 import { GatewayDispatchEvents } from "@discordjs/core";
+import { InfrastructureUsed } from "@prisma/client";
 import EventHandler from "../../../lib/classes/EventHandler.js";
 import type ExtendedClient from "../../../lib/extensions/ExtendedClient.js";
 
@@ -25,7 +26,7 @@ export default class MessageDelete extends EventHandler {
 
 		if (job) {
 			return Promise.all([
-				this.client.functions.cancelJob(job.id, job.infrastructureUsed.toLowerCase() as "endpoint" | "serverless"),
+				job.infrastructureUsed === InfrastructureUsed.SERVERLESS && this.client.functions.cancelJob(job.id),
 				this.client.prisma.job.delete({ where: { id: job.id } }),
 				this.client.api.channels.deleteMessage(message.channel_id, job.responseMessageId),
 			]);

@@ -246,13 +246,11 @@ export default class TextCommand {
 					};
 			}
 		} else if (message.guild_id && this.clientPermissions !== "0") {
-			let guildMe = this.client.guildMeCache.get(message.guild_id!);
+			const guildMe = await this.client.api.guilds.getMember(message.guild_id, env.APPLICATION_ID);
 
 			try {
-				if (!guildMe) guildMe = await this.client.api.guilds.getMember(message.guild_id, env.APPLICATION_ID);
-
 				if (!this.client.guildOwnersCache.has(message.guild_id)) {
-					const guild = await this.client.api.guilds.get(message.guild_id);
+					const guild = await this.client.api.guilds.get(message.guild_id, { with_counts: false });
 
 					this.client.guildOwnersCache.set(message.guild_id, guild.owner_id);
 				}

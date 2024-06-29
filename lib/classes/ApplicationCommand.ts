@@ -260,11 +260,7 @@ export default class ApplicationCommand {
 			);
 
 			if (missingPermissions) {
-				let guildMe = this.client.guildMeCache.get(interaction.guild_id!);
-
 				try {
-					if (!guildMe) guildMe = await this.client.api.guilds.getMember(interaction.guild_id, env.APPLICATION_ID);
-
 					if (!this.client.guildOwnersCache.has(interaction.guild_id)) {
 						const guild = await this.client.api.guilds.get(interaction.guild_id);
 

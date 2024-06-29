@@ -57,14 +57,10 @@ export default {
 	/**
 	 * The list of intents the bot requires to function.
 	 */
-	intents:
-		GatewayIntentBits.Guilds |
-		GatewayIntentBits.GuildMessages |
-		GatewayIntentBits.MessageContent |
-		GatewayIntentBits.GuildMembers,
+	intents: GatewayIntentBits.Guilds | GatewayIntentBits.GuildMessages | GatewayIntentBits.MessageContent,
 
 	/**
 	 * A list of permissions that the bot needs to function at all.
 	 */
-	requiredPermissions: PermissionFlagsBits.EmbedLinks | PermissionFlagsBits.SendMessages,
+	requiredPermissions: PermissionFlagsBits.SendMessages | PermissionFlagsBits.EmbedLinks,
 };

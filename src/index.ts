@@ -17,7 +17,7 @@ const gateway = new WebSocketManager({
 	token: env.DISCORD_TOKEN,
 	intents: botConfig.intents,
 	initialPresence: botConfig.presence,
-	compression: CompressionMethod.ZlibStream,
+	compression: CompressionMethod.ZlibSync,
 	rest,
 	// This will cause 2 workers to spawn, 3 shards per worker.
 	// "each shard gets its own bubble which handles decoding, heartbeats, etc. And your main thread just gets the final result" - Vlad.
