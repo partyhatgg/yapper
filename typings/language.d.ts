@@ -70,6 +70,7 @@ export interface LanguageValues {
 	UseExternalSounds: {};
 	SendVoiceMessages: {};
 	SendPolls: {};
+	UseExternalApps: {};
 	INVALID_ARGUMENT_TITLE: {};
 	INVALID_PATH_TITLE: {};
 	INVALID_PATH_DESCRIPTION: {};

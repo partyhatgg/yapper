@@ -1,7 +1,7 @@
 import { execSync } from "node:child_process";
 import { resolve } from "node:path";
 import { env } from "node:process";
-import type { APIGuildMember, APIRole, ClientOptions, MappedEvents } from "@discordjs/core";
+import type { APIRole, ClientOptions, MappedEvents } from "@discordjs/core";
 import { API, Client } from "@discordjs/core";
 import { PrismaClient } from "@prisma/client";
 import * as metrics from "datadog-metrics";
@@ -95,11 +95,6 @@ export default class ExtendedClient extends Client {
 	 */
 
 	public guildRolesCache: Map<string, Map<string, APIRole>>;
-
-	/**
-	 * A cache of the bot's user in different guilds.
-	 */
-	public guildMeCache: Map<string, APIGuildMember & {}>;
 
 	/**
 	 * An approximation of how many users the bot can see.
@@ -216,7 +211,6 @@ export default class ExtendedClient extends Client {
 
 		this.guildOwnersCache = new Map();
 		this.guildRolesCache = new Map();
-		this.guildMeCache = new Map();
 
 		this.approximateUserCount = 0;
 

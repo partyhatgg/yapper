@@ -15,7 +15,7 @@ enum CommandType {
 
 enum InfrastructureUsed {
     SERVERLESS
-    ENDPOINT // The Runpod Managed Endpoint was deprecated June 1st, 2024.
+    ENDPOINT // The RunPod AI API Endpoints were deprecated July 1st, 2024.
     CHATTER
 }
 

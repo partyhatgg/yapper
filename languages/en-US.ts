@@ -72,6 +72,7 @@ export default {
 	UseExternalSounds: "Use External Sounds",
 	SendVoiceMessages: "Send Voice Messages",
 	SendPolls: "Send Polls",
+	UseExternalApps: "Use External Apps",
 
 	INVALID_ARGUMENT_TITLE: "Invalid Argument",
 
