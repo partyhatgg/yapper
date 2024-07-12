@@ -13,10 +13,3 @@ services:
     env_file:
       - .env.dev # Change to .env.production for Production
 
-  chatter:
-    build: github.com/partyhatgg/chatter.git
-    ports:
-      - 3002:8000
-    environment:
-      - OMP_NUM_THREADS=5
-      - API_KEY=supersecret

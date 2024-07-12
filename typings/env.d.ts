@@ -14,7 +14,8 @@ declare global {
 			GUILD_HOOK: string;
 			NODE_ENV: "development" | "production";
 			RUNPOD_API_KEY: string;
-			RUNPOD_ENDPOINT_ID: string;
+			RUNPOD_HQ_ENDPOINT_ID: string;
+			RUNPOD_LQ_ENDPOINT_ID: string;
 			SECRET: string;
 			SENTRY_DSN: string;
 			STRIPE_KEY: string;
@@ -24,4 +25,4 @@ declare global {
 	}
 }
 
-export {};
+export type {};

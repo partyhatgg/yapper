@@ -23,26 +23,18 @@ This bot uses PostgreSQL! The format for a `DATABASE_URL` is:
 postgresql://[user[:password]@][host][:port][/dbname]
 ```
 
-### Chatter
-
-Currently, Yapper has a hard dependency on the Chatter service. Transcriptions are sent to a Chatter installation of your choice. 
-
-You can clone and run Chatter as a Docker Container from [partyhatgg/chatter](https://github.com/partyhatgg/chatter).
-
-Chatter mimics the RunPod API in response, so while in theory you could just set the `CHATTER_URL` to a RunPod installation this has not been tested yet. 
-
 <details>
 <summary>Using RunPod</summary>
 <br>
 
-You will be asked for an `RUNPOD_API_KEY` and `RUNPOD_ENDPOINT_ID`. 
+You will be asked for an `RUNPOD_API_KEY`, `RUNPOD_LQ_ENDPOINT_ID`, and `RUNPOD_HQ_ENDPOINT_ID`. 
 
 From the [RunPod Console](https://runpod.io/console), select ["Serverless"](https://www.runpod.io/console/serverless), then ["Quick Deploy"](https://www.runpod.io/console/serverless/quick-deploy) and select "Faster Whisper". RunPod will recommend a 24 GB GPU, this is perfectly fine. However, feel free to switch to the "16 GB GPU".
 
-Your `RUNPOD_ENDPOINT_ID` is under the name "Faster Whisper", or whatever custom name you've provided:
+For many developers, you may set your `RUNPOD_LQ_ENDPOINT_ID` *and* `RUNPOD_HQ_ENDPOINT_ID` to the value under the name "Faster Whisper", or whatever custom name you've provided:
 ![image](docs/runpod_endpoint.png)
 
-Next, select ["Settings"](https://runpod.io/console/serverless/user/settings), expand "API Keys" and create a new API Key with "Read" permission. Write permission allows this API key to modify your account, which is likely not what you want. This is your `RUNPOD_API_KEY`.
+Next, select ["Settings"](https://runpod.io/console/serverless/user/settings), expand "API Keys" and create a new API Key with "Read" permission. Write permissions will allow this API key to modify your account, which is probably not what you want. This key is your `RUNPOD_API_KEY`.
 </details>
 
 ## Running without Docker:

@@ -1,9 +1,8 @@
 import type { GatewayMessageCreateDispatchData, WithIntrinsicProps } from "@discordjs/core";
 import { GatewayDispatchEvents, MessageFlags } from "@discordjs/core";
-import { InfrastructureUsed } from "@prisma/client";
 import EventHandler from "../../../lib/classes/EventHandler.js";
 import type ExtendedClient from "../../../lib/extensions/ExtendedClient.js";
-import Functions from "../../../lib/utilities/functions.js";
+import Functions, { TranscriptionModel } from "../../../lib/utilities/functions.js";
 
 export default class MessageCreate extends EventHandler {
 	public constructor(client: ExtendedClient) {
@@ -45,21 +44,21 @@ export default class MessageCreate extends EventHandler {
 				allowed_mentions: { parse: [] },
 			});
 
-			const endpointHealth = await Functions.getEndpointHealth();
+			const endpointHealth = await Functions.getEndpointHealth(TranscriptionModel.LARGEV3);
 
 			let job;
 
 			if (endpointHealth.workers.running <= 0) {
-				job = await Functions.transcribeAudio(attachment.url);
+				job = await Functions.transcribeAudio(attachment.url, "run", TranscriptionModel.MEDIUM);
 			} else {
-				job = await Functions.transcribeAudioRunPod(attachment.url, "run", "large-v3");
+				job = await Functions.transcribeAudio(attachment.url, "run", TranscriptionModel.LARGEV3);
 			}
 
 			return this.client.prisma.job.create({
 				data: {
 					id: job.id,
 					attachmentUrl: attachment.url,
-					infrastructureUsed: "transcription" in job ? InfrastructureUsed.CHATTER : InfrastructureUsed.SERVERLESS,
+					model: endpointHealth.workers.running <= 0 ? TranscriptionModel.MEDIUM : TranscriptionModel.LARGEV3,
 					channelId: message.channel_id,
 					guildId: message.guild_id ?? "@me",
 					initialMessageId: message.id,

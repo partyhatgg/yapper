@@ -2,17 +2,12 @@
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readdirSync } from "node:fs";
 import { env } from "node:process";
+import type { Job } from "@prisma/client";
 import Config from "../../config/bot.config.js";
-import type {
-	ChatterRunSyncResponse,
-	RunPodHealthResponse,
-	RunPodRunSyncResponse,
-	RunResponse,
-} from "../../typings/index.js";
+import type { RunPodHealthResponse, RunPodRunSyncResponse, RunResponse } from "../../typings/index.js";
 import type Language from "../classes/Language.js";
 import Logger from "../classes/Logger.js";
 import type ExtendedClient from "../extensions/ExtendedClient.js";
-import { InfrastructureUsed, Job } from "@prisma/client";
 
 export enum TranscriptionState {
 	CANCELLED = "CANCELLED",
@@ -20,6 +15,11 @@ export enum TranscriptionState {
 	FAILED = "FAILED",
 	IN_PROGRESS = "IN_PROGRESS",
 	IN_QUEUE = "IN_QUEUE",
+}
+
+export enum TranscriptionModel {
+	LARGEV3 = "large-v3",
+	MEDIUM = "large",
 }
 
 export default class Functions {
@@ -288,12 +288,39 @@ export default class Functions {
 	}
 
 	/**
+	 * Get the RunPod endpoint ID for a job.
+	 *
+	 * @param job The Prisma Job
+	 */
+	public static getEndpointIdFromJob(job: Job) {
+		if (job.model === TranscriptionModel.LARGEV3) {
+			return env.RUNPOD_HQ_ENDPOINT_ID;
+		} else {
+			return env.RUNPOD_LQ_ENDPOINT_ID;
+		}
+	}
+
+	/**
+	 * Get the RunPod endpoint ID for a model.
+	 *
+	 * @param model The model to derive the endpoint ID from.
+	 * @returns Endpoint ID
+	 */
+	public static getEndpointIdFromModel(model: TranscriptionModel) {
+		if (model === TranscriptionModel.LARGEV3) {
+			return env.RUNPOD_HQ_ENDPOINT_ID;
+		} else {
+			return env.RUNPOD_LQ_ENDPOINT_ID;
+		}
+	}
+
+	/**
 	 * Get the status of a RunPod endpoint.
 	 *
 	 * @returns The status of the RunPod endpoint.
 	 */
-	public static async getEndpointHealth() {
-		const response = await fetch(`https://api.runpod.ai/v2/${env.RUNPOD_ENDPOINT_ID}/health`, {
+	public static async getEndpointHealth(endpoint: TranscriptionModel) {
+		const response = await fetch(`https://api.runpod.ai/v2/${this.getEndpointIdFromModel(endpoint)}/health`, {
 			method: "GET",
 			headers: {
 				"Content-Type": "application/json",
@@ -305,33 +332,13 @@ export default class Functions {
 	}
 
 	/**
-	 * Get the status of a Chatter job.
-	 *
-	 * @param jobId The job ID to get the status of.
-	 * @returns The status of the Chatter job.
-	 */
-	public static async getChatterJobStatus(jobId: string) {
-		const response = await fetch(`${env.CHATTER_URL}/job/${jobId}`, {
-			method: "GET",
-			headers: {
-				"Content-Type": "application/json",
-				Authorization: `${env.CHATTER_API_KEY}`,
-			},
-		});
-
-		if (response.status !== 200) return null;
-
-		return response.json() as Promise<ChatterRunSyncResponse | RunResponse>;
-	}
-
-	/**
 	 * Get the status of a RunPod job.
 	 *
-	 * @param jobId The job ID to get the status of.
+	 * @param job The Prima Job to get the status of.
 	 * @returns The status of the RunPod job.
 	 */
-	public static async getRunpodJobStatus(jobId: string) {
-		const response = await fetch(`https://api.runpod.ai/v2/${env.RUNPOD_ENDPOINT_ID}/status/${jobId}`, {
+	public static async getJobStatus(job: Job) {
+		const response = await fetch(`https://api.runpod.ai/v2/${this.getEndpointIdFromJob(job)}/status/${job.id}`, {
 			method: "GET",
 			headers: {
 				"Content-Type": "application/json",
@@ -345,30 +352,13 @@ export default class Functions {
 	}
 
 	/**
-	 * Get the status of a job whose source you do not know.
-	 *
-	 * @param job The Prisma Job to get a status of
-	 * @returns The respective platform status response.
-	 */
-	public static async getJobStatus(job: Job): Promise<RunResponse | null> {
-		let res;
-		if (job.infrastructureUsed === InfrastructureUsed.SERVERLESS) {
-			res = await this.getRunpodJobStatus(job.id);
-		} else {
-			res = await this.getChatterJobStatus(job.id);
-		}
-
-		return res;
-	}
-
-	/**
 	 * Cancel a RunPod job.
 	 *
-	 * @param jobId The job ID to cancel.
+	 * @param job The job ID to cancel.
 	 * @returns The status of the RunPod job.
 	 */
-	public async cancelJob(jobId: string) {
-		const response = await fetch(`https://api.runpod.ai/v2/${env.RUNPOD_ENDPOINT_ID}/cancel/${jobId}`, {
+	public async cancelJob(job: Job) {
+		const response = await fetch(`https://api.runpod.ai/v2/${Functions.getEndpointIdFromJob(job)}/cancel/${job.id}`, {
 			method: "POST",
 			headers: {
 				"Content-Type": "application/json",
@@ -376,29 +366,7 @@ export default class Functions {
 			},
 		});
 
-		return response.json() as Promise<RunResponse & { status: TranscriptionState.CANCELLED }>;
-	}
-
-	/**
-	 * Transcribe an attachment using Chatter
-	 *
-	 * @param attachmentUrl The attachment to transcribe.
-	 */
-	public static async transcribeAudio(attachmentUrl: string) {
-		const response = await fetch(`${env.CHATTER_URL}/transcribe`, {
-			method: "POST",
-			body: JSON.stringify({
-				url: attachmentUrl,
-			}),
-			headers: {
-				"Content-Type": "application/json",
-				Authorization: `${env.CHATTER_API_KEY}`,
-			},
-		});
-
-		const data: RunResponse = await response.json();
-
-		return data;
+		return response.json() as Promise<RunPodRunSyncResponse>;
 	}
 
 	/**
@@ -409,19 +377,20 @@ export default class Functions {
 	 * @param model The model to use for the transcription. Different models will have different accuracies and speeds.
 	 * @returns The job ID and state, or the transcription.
 	 */
-	public static async transcribeAudioRunPod(
+	public static async transcribeAudio(
 		attachmentUrl: string,
 		endpointType: "run" | "runsync",
-		model: "base" | "large-v1" | "large-v2" | "large-v3" | "medium" | "small" | "tiny",
+		model: TranscriptionModel,
+		translate = false,
 	) {
-		const response = await fetch(`https://api.runpod.ai/v2/${env.RUNPOD_ENDPOINT_ID}/${endpointType}`, {
+		const response = await fetch(`https://api.runpod.ai/v2/${this.getEndpointIdFromModel(model)}/${endpointType}`, {
 			method: "POST",
 			body: JSON.stringify({
 				input: {
 					audio: attachmentUrl,
 					model,
 					transcription: "plain_text",
-					translate: true,
+					translate,
 					temperature: 0,
 				},
 				enable_vad: false,
@@ -433,7 +402,7 @@ export default class Functions {
 			},
 		});
 
-		const data: RunResponse = await response.json();
+		const data: RunPodRunSyncResponse = await response.json();
 
 		if (endpointType === "runsync" && data.status === TranscriptionState.COMPLETED) {
 			const typedData = data as RunPodRunSyncResponse;

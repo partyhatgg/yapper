@@ -13,12 +13,6 @@ enum CommandType {
     APPLICATION_COMMAND
 }
 
-enum InfrastructureUsed {
-    SERVERLESS
-    ENDPOINT // The RunPod AI API Endpoints were deprecated July 1st, 2024.
-    CHATTER
-}
-
 enum PurchaseType {
     ONCE
     RECURRING
@@ -69,7 +63,7 @@ model Job {
     initialMessageId   String
     responseMessageId  String
     guildId            String
-    infrastructureUsed InfrastructureUsed
+    model              String
     channelId          String
     interactionId      String?
     interactionToken   String?
