@@ -216,24 +216,6 @@ export default class ExtendedClient extends Client {
 
 		// I forget what this is even used for, but Vlad from https://github.com/vladfrangu/highlight uses it and recommended me to use it a while ago.
 		if (env.NODE_ENV === "development") {
-			this.prisma.$on("query", (event) => {
-				try {
-					const paramsArray = JSON.parse(event.params);
-					const newQuery = event.query.replaceAll(/\$(?<captured>\d+)/g, (_, number) => {
-						const value = paramsArray[Number(number) - 1];
-
-						if (typeof value === "string") return `"${value}"`;
-						else if (Array.isArray(value)) return `'${JSON.stringify(value)}'`;
-
-						return String(value);
-					});
-
-					this.logger.debug("prisma:query", newQuery);
-				} catch {
-					this.logger.debug("prisma:query", event.query, "PARAMETERS", event.params);
-				}
-			});
-
 			this.prisma.$use(async (params, next) => {
 				const before = Date.now();
 				// eslint-disable-next-line n/callback-return

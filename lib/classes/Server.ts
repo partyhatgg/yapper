@@ -4,12 +4,13 @@ import type { APIChannel } from "@discordjs/core";
 import { API, ButtonStyle, ComponentType, RESTJSONErrorCodes } from "@discordjs/core";
 import { DiscordAPIError, REST } from "@discordjs/rest";
 import { serve } from "@hono/node-server";
-import { InfrastructureUsed, PrismaClient } from "@prisma/client";
+import type { Job } from "@prisma/client";
+import { PrismaClient } from "@prisma/client";
 import * as metrics from "datadog-metrics";
 import { Hono } from "hono";
 import botConfig from "../../config/bot.config.js";
-import type { ChatterRunSyncResponse, RunPodRunSyncResponse } from "../../typings/index.js";
-import Functions, { TranscriptionState } from "../utilities/functions.js";
+import type { RunPodRunSyncResponse } from "../../typings/index.js";
+import Functions, { TranscriptionModel, TranscriptionState } from "../utilities/functions.js";
 import Logger from "./Logger.js";
 
 export default class Server {
@@ -151,6 +152,20 @@ export default class Server {
 
 						if (!jobStatus) return this.prisma.job.delete({ where: { id: job.id } });
 
+						if (jobStatus.status === TranscriptionState.FAILED) {
+							if (job.interactionId) {
+								await this.discordApi.interactions.editReply(env.APPLICATION_ID, job.interactionToken!, {
+									content: "Sorry, this transcription failed.",
+								});
+							} else {
+								await this.discordApi.channels.editMessage(job.channelId!, job.responseMessageId, {
+									content: "Sorry, this transcription failed.",
+								});
+							}
+
+							return this.prisma.job.delete({ where: { id: job.id } });
+						}
+
 						if (jobStatus.status === TranscriptionState.COMPLETED) {
 							return fetch(`http://127.0.0.1:${this.port}/job_complete?secret=${env.SECRET}`, {
 								method: "POST",
@@ -174,7 +189,7 @@ export default class Server {
 		this.router.get("/", (context) => context.redirect("https://polar.blue"));
 
 		this.router.post("/job_complete", async (context) => {
-			let body: ChatterRunSyncResponse | RunPodRunSyncResponse;
+			let body: RunPodRunSyncResponse;
 
 			try {
 				body = await context.req.json();
@@ -182,7 +197,7 @@ export default class Server {
 				return context.json({ ack: true, runpod: false });
 			}
 
-			const job = await this.prisma.job.findUnique({ where: { id: body.id } });
+			const job: Job | null = await this.prisma.job.findUnique({ where: { id: body.id } });
 
 			if (!job) {
 				context.status(400);
@@ -198,9 +213,8 @@ export default class Server {
 
 				const splitTranscription = body.output.transcription.match(/.{1,1996}/g);
 				if (!splitTranscription) {
-					context.status(500);
 					await this.prisma.job.delete({ where: { id: job.id } });
-					return context.json({ message: "Failed to split transcription." });
+					return context.json({ message: "Failed to split transcription." }, 500);
 				}
 
 				const firstTranscription = splitTranscription.shift();
@@ -322,7 +336,7 @@ export default class Server {
 					await this.prisma.job.delete({ where: { id: job.id } });
 
 					if (body.output.model === "medium") {
-						const newJob = await Functions.transcribeAudioRunPod(job.attachmentUrl, "run", "large-v3");
+						const newJob = await Functions.transcribeAudio(job.attachmentUrl, "run", TranscriptionModel.LARGEV3);
 
 						await Promise.all([
 							this.prisma.transcription.upsert({
@@ -344,7 +358,6 @@ export default class Server {
 								data: {
 									...job,
 									id: newJob.id,
-									infrastructureUsed: InfrastructureUsed.SERVERLESS,
 								},
 							}),
 						]);
@@ -374,8 +387,8 @@ export default class Server {
 
 			await this.prisma.job.delete({ where: { id: job.id } });
 
-			if (body.output.model === "medium") {
-				const newJob = await Functions.transcribeAudioRunPod(job.attachmentUrl, "run", "large-v3");
+			if (body.output.model === TranscriptionModel.MEDIUM) {
+				const newJob = await Functions.transcribeAudio(job.attachmentUrl, "run", TranscriptionModel.LARGEV3);
 
 				await Promise.all([
 					this.prisma.transcription.upsert({
@@ -412,7 +425,6 @@ export default class Server {
 						data: {
 							...job,
 							id: newJob.id,
-							infrastructureUsed: InfrastructureUsed.SERVERLESS,
 						},
 					}),
 				]);

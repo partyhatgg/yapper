@@ -42,15 +42,6 @@ export interface RunResponse {
 	status: TranscriptionState;
 }
 
-export interface ChatterRunSyncResponse extends RunResponse {
-	output: {
-		detected_language: string;
-		device: string;
-		model: string;
-		transcription: string;
-	};
-}
-
 export interface RunPodRunSyncResponse extends RunResponse {
 	delayTime: number;
 	executionTime: number;

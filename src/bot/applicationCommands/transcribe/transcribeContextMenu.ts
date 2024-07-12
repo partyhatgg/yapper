@@ -6,11 +6,10 @@ import {
 	ComponentType,
 	MessageFlags,
 } from "@discordjs/core";
-import { InfrastructureUsed } from "@prisma/client";
 import ApplicationCommand from "../../../../lib/classes/ApplicationCommand.js";
 import type Language from "../../../../lib/classes/Language.js";
 import type ExtendedClient from "../../../../lib/extensions/ExtendedClient.js";
-import Functions from "../../../../lib/utilities/functions.js";
+import Functions, { TranscriptionModel } from "../../../../lib/utilities/functions.js";
 import type { APIInteractionWithArguments } from "../../../../typings/index";
 
 export default class TranscribeContextMenu extends ApplicationCommand {
@@ -142,19 +141,19 @@ export default class TranscribeContextMenu extends ApplicationCommand {
 			allowed_mentions: { parse: [] },
 		});
 
-		const endpointHealth = await Functions.getEndpointHealth();
+		const endpointHealth = await Functions.getEndpointHealth(TranscriptionModel.LARGEV3);
 
 		const [job, reply] = await Promise.all([
 			endpointHealth.workers.running <= 0
-				? Functions.transcribeAudio(attachmentUrl)
-				: Functions.transcribeAudioRunPod(attachmentUrl, "run", "large-v3"),
+				? Functions.transcribeAudio(attachmentUrl, "run", TranscriptionModel.MEDIUM)
+				: Functions.transcribeAudio(attachmentUrl, "run", TranscriptionModel.LARGEV3),
 			this.client.api.interactions.getOriginalReply(interaction.application_id, interaction.token),
 		]);
 
 		return this.client.prisma.job.create({
 			data: {
 				id: job.id,
-				infrastructureUsed: InfrastructureUsed.ENDPOINT,
+				model: endpointHealth.workers.running <= 0 ? TranscriptionModel.MEDIUM : TranscriptionModel.LARGEV3,
 				attachmentUrl,
 				channelId: interaction.channel.id,
 				guildId: interaction.guild_id ?? "@me",
