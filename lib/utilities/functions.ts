@@ -19,7 +19,7 @@ export enum TranscriptionState {
 
 export enum TranscriptionModel {
 	LARGEV3 = "large-v3",
-	MEDIUM = "large",
+	MEDIUM = "medium",
 }
 
 export default class Functions {
