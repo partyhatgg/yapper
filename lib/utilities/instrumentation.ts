@@ -1,7 +1,6 @@
 import { env } from "node:process";
 import { format } from "node:util";
 import type { APIInteraction, APIMessage } from "@discordjs/core";
-import { DiagConsoleLogger, DiagLogLevel, diag } from "@opentelemetry/api";
 import { OTLPMetricExporter } from "@opentelemetry/exporter-metrics-otlp-grpc";
 import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-grpc";
 import { dockerCGroupV1Detector } from "@opentelemetry/resource-detector-docker";
