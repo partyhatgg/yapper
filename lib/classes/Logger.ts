@@ -2,7 +2,7 @@ import { env } from "node:process";
 import { inspect } from "node:util";
 import type { RESTPostAPIWebhookWithTokenJSONBody } from "@discordjs/core";
 import { bgGreenBright, bgMagentaBright, bgRedBright, bgYellowBright, bold } from "colorette";
-import init from "../utilities/sentry.js";
+import { sentry } from "../utilities/instrumentation.js";
 
 export class Logger {
 	/**
@@ -19,7 +19,7 @@ export class Logger {
 	 * Create our logger.
 	 */
 	public constructor() {
-		this.sentry = init();
+		this.sentry = sentry;
 		this.webhooks = new Map();
 	}
 

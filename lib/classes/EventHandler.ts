@@ -1,5 +1,6 @@
 import type { MappedEvents } from "@discordjs/core";
 import type ExtendedClient from "../extensions/ExtendedClient.js";
+import { websocketEventMetric } from "../utilities/metrics.js";
 
 export default class EventHandler {
 	/**
@@ -29,7 +30,7 @@ export default class EventHandler {
 	 * @param name The name of our event, this is what we will use to listen to the event.
 	 * @param once Whether or not this event should only be handled once.
 	 */
-	public constructor(client: ExtendedClient, name: keyof MappedEvents, once: boolean = false) {
+	public constructor(client: ExtendedClient, name: keyof MappedEvents, once = false) {
 		this.name = name;
 		this.client = client;
 		this.once = once;
@@ -43,7 +44,9 @@ export default class EventHandler {
 	 * @returns The result of our event.
 	 */
 	private async _run(...args: any[]) {
-		this.client.dataDog?.increment("websocket_events", 1, [`type:${this.name}`]);
+		websocketEventMetric.add(1, {
+			type: this.name,
+		});
 
 		try {
 			return await this.run(...args);

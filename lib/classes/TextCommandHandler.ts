@@ -3,6 +3,7 @@ import type { GatewayMessageCreateDispatchData, WithIntrinsicProps } from "@disc
 import type ExtendedClient from "../extensions/ExtendedClient.js";
 import type Language from "./Language.js";
 import type TextCommand from "./TextCommand";
+import { logCommandUsage } from "../utilities/metrics.js";
 
 export default class TextCommandHandler {
 	/**
@@ -190,19 +191,9 @@ export default class TextCommandHandler {
 
 			if (textCommand.cooldown) await textCommand.applyCooldown(message.author.id);
 
-			this.client.dataDog?.increment("command_used", 1, [
-				`command:${textCommand.name}`,
-				`type:text`,
-				`success:true`,
-				`shard:${shardId}`,
-			]);
+			logCommandUsage(textCommand, shardId, true);
 		} catch (error) {
-			this.client.dataDog?.increment("command_used", 1, [
-				`command:${textCommand.name}`,
-				`type:text`,
-				`success:false`,
-				`shard:${shardId}`,
-			]);
+			logCommandUsage(textCommand, shardId, false);
 			this.client.logger.error(error);
 
 			const eventId = await this.client.logger.sentry.captureWithMessage(error, message);
