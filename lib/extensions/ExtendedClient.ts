@@ -1,10 +1,8 @@
-import { execSync } from "node:child_process";
 import { resolve } from "node:path";
 import { env } from "node:process";
 import type { APIRole, ClientOptions, MappedEvents } from "@discordjs/core";
 import { API, Client } from "@discordjs/core";
 import { PrismaClient } from "@prisma/client";
-import * as metrics from "datadog-metrics";
 import i18next from "i18next";
 import intervalPlural from "i18next-intervalplural-postprocessor";
 import Stripe from "stripe";
@@ -172,11 +170,6 @@ export default class ExtendedClient extends Client {
 	public readonly modalHandler: ModalHandler;
 
 	/**
-	 * Our DataDog client.
-	 */
-	public readonly dataDog?: typeof metrics;
-
-	/**
 	 * Our Stripe client
 	 */
 	public readonly stripe?: Stripe;
@@ -221,18 +214,6 @@ export default class ExtendedClient extends Client {
 				this.logger.debug("prisma:query", `${params.model}.${params.action} took ${String(after - before)}ms`);
 
 				return result;
-			});
-		}
-
-		if (env.DATADOG_API_KEY) {
-			// @ts-expect-error
-			this.dataDog = metrics.default;
-
-			this.dataDog!.init({
-				flushIntervalSeconds: 0,
-				apiKey: env.DATADOG_API_KEY,
-				prefix: `${this.config.botName.toLowerCase().split(" ").join("_")}.`,
-				defaultTags: [`env:${env.NODE_ENV}`],
 			});
 		}
 

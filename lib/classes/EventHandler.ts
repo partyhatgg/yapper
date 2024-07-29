@@ -1,5 +1,6 @@
 import type { MappedEvents } from "@discordjs/core";
 import type ExtendedClient from "../extensions/ExtendedClient.js";
+import { websocketEventMetric } from "../utilities/metrics.js";
 
 export default class EventHandler {
 	/**
@@ -43,7 +44,9 @@ export default class EventHandler {
 	 * @returns The result of our event.
 	 */
 	private async _run(...args: any[]) {
-		this.client.dataDog?.increment("websocket_events", 1, [`type:${this.name}`]);
+		websocketEventMetric.add(1, {
+			type: this.name,
+		});
 
 		try {
 			return await this.run(...args);

@@ -16,6 +16,7 @@ import {
 import { DiscordAPIError } from "@discordjs/rest";
 import type { APIInteractionWithArguments, InteractionArguments } from "../../typings";
 import type ExtendedClient from "../extensions/ExtendedClient.js";
+import { logCommandUsage } from "../utilities/metrics.js";
 import applicationCommandOptionTypeReference from "../utilities/reference.js";
 import type ApplicationCommand from "./ApplicationCommand.js";
 import type Language from "./Language.js";
@@ -417,19 +418,9 @@ export default class ApplicationCommandHandler {
 			if (applicationCommand.cooldown)
 				await applicationCommand.applyCooldown((interaction.member ?? interaction).user!.id);
 
-			this.client.dataDog?.increment("command_used", 1, [
-				`command:${applicationCommand.name}`,
-				`type:${applicationCommand.type === ApplicationCommandType.ChatInput ? "slash" : "context"}`,
-				`success:true`,
-				`shard:${shardId}`,
-			]);
+			logCommandUsage(applicationCommand, shardId, true);
 		} catch (error) {
-			this.client.dataDog?.increment("command_used", 1, [
-				`command:${applicationCommand.name}`,
-				`type:${applicationCommand.type === ApplicationCommandType.ChatInput ? "slash" : "context"}`,
-				`success:false`,
-				`shard:${shardId}`,
-			]);
+			logCommandUsage(applicationCommand, shardId, false);
 			this.client.logger.error(error);
 
 			const eventId = await this.client.logger.sentry.captureWithInteraction(error, interaction);

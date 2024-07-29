@@ -6,6 +6,7 @@ import type {
 import { ApplicationCommandOptionType } from "@discordjs/core";
 import type { APIInteractionWithArguments, InteractionArguments } from "../../typings";
 import type ExtendedClient from "../extensions/ExtendedClient";
+import { autoCompleteMetric } from "../utilities/metrics.js";
 import applicationCommandOptionTypeReference from "../utilities/reference.js";
 import type AutoComplete from "./AutoComplete";
 import type Language from "./Language";
@@ -140,7 +141,10 @@ export default class AutoCompleteHandler {
 		});
 		const language = this.client.languageHandler.getLanguage(userLanguage?.languageId ?? interaction.locale);
 
-		this.client.dataDog?.increment("autocomplete_responses", 1, [`name:${name.join("-")}`, `shard:${shardId}`]);
+		autoCompleteMetric.add(1, {
+			name: name.join("-"),
+			shard: shardId,
+		});
 
 		return this.runAutoComplete(autoComplete, interactionWithArguments, language, shardId);
 	}

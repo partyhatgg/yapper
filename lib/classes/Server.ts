@@ -6,11 +6,10 @@ import { DiscordAPIError, REST } from "@discordjs/rest";
 import { serve } from "@hono/node-server";
 import type { Job } from "@prisma/client";
 import { PrismaClient } from "@prisma/client";
-import * as metrics from "datadog-metrics";
 import { Hono } from "hono";
-import botConfig from "../../config/bot.config.js";
 import type { RunPodRunSyncResponse } from "../../typings/index.js";
 import Functions, { TranscriptionModel, TranscriptionState } from "../utilities/functions.js";
+import { transcriptionsMetric } from "../utilities/metrics.js";
 import Logger from "./Logger.js";
 
 export default class Server {
@@ -51,11 +50,6 @@ export default class Server {
 	private readonly discordApi = new API(new REST({ version: "10" }).setToken(env.DISCORD_TOKEN));
 
 	/**
-	 * Datadog
-	 */
-	public readonly dataDog?: typeof metrics;
-
-	/**
 	 * Create our Hono server.
 	 *
 	 * @param port The port the server should run on.
@@ -79,18 +73,6 @@ export default class Server {
 				{ level: "query", emit: "event" },
 			],
 		});
-
-		if (env.DATADOG_API_KEY) {
-			// @ts-expect-error
-			this.dataDog = metrics.default;
-
-			this.dataDog!.init({
-				flushIntervalSeconds: 0,
-				apiKey: env.DATADOG_API_KEY,
-				prefix: `${botConfig.botName.toLowerCase().split(" ").join("_")}.`,
-				defaultTags: [`env:${env.NODE_ENV}`],
-			});
-		}
 
 		// I forget what this is even used for, but Vlad from https://github.com/vladfrangu/highlight uses it and recommended me to use it a while ago.
 		if (env.NODE_ENV === "development") {
@@ -204,7 +186,9 @@ export default class Server {
 				return context.json({ message: "Job not found." });
 			}
 
-			this.dataDog?.increment("transcriptions", 1, [`length:${body.output.transcription.length}`]);
+			transcriptionsMetric.add(1, {
+				length: body.output.transcription.length,
+			});
 
 			if (body.output.transcription.length > 2_000) {
 				const message = job.interactionId

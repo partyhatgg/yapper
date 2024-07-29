@@ -16,8 +16,6 @@ export default class GuildDelete extends EventHandler {
 	public override async run({ shardId, data }: WithIntrinsicProps<GatewayGuildDeleteDispatchData>) {
 		if (data.unavailable) return;
 
-		this.client.dataDog?.increment("guild_count", -1, [`shard:${shardId}`]);
-
 		this.client.guildRolesCache.delete(data.id);
 		this.client.guildOwnersCache.delete(data.id);
 

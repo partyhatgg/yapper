@@ -3,6 +3,7 @@ import type { GatewayReadyDispatchData, WithIntrinsicProps } from "@discordjs/co
 import { GatewayDispatchEvents } from "@discordjs/core";
 import EventHandler from "../../../lib/classes/EventHandler.js";
 import type ExtendedClient from "../../../lib/extensions/ExtendedClient.js";
+import { approximateUserCountGauge, guildCountGauge, guildGauge } from "../../../lib/utilities/metrics.js";
 
 export default class Ready extends EventHandler {
 	public constructor(client: ExtendedClient) {
@@ -15,7 +16,9 @@ export default class Ready extends EventHandler {
 	 * https://discord.com/developers/docs/topics/gateway-events#ready
 	 */
 	public override async run({ shardId, data }: WithIntrinsicProps<GatewayReadyDispatchData>) {
-		this.client.dataDog?.gauge("guild_count", data.guilds.length, [`shard:${shardId}`]);
+		guildCountGauge.record(data.guilds.length, {
+			shard: shardId,
+		});
 
 		for (const guild of data.guilds) this.client.guildOwnersCache.set(guild.id, "");
 
@@ -24,17 +27,8 @@ export default class Ready extends EventHandler {
 		);
 
 		setInterval(() => {
-			this.client.dataDog?.gauge("guilds", this.client.guildOwnersCache.size);
-			this.client.dataDog?.gauge("approximate_user_count", this.client.approximateUserCount);
-
-			this.client.dataDog?.flush(
-				() => {},
-				// eslint-disable-next-line promise/prefer-await-to-callbacks
-				(_error) => {
-					// this.client.logger.error(error);
-					// this.client.logger.sentry.captureException(error);
-				},
-			);
+			guildGauge.record(this.client.guildOwnersCache.size);
+			approximateUserCountGauge.record(this.client.approximateUserCount);
 		}, 10_000);
 
 		return this.client.logger.webhookLog("console", {

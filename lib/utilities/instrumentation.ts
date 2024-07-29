@@ -11,7 +11,7 @@ import { SEMRESATTRS_SERVICE_NAME, SEMRESATTRS_SERVICE_VERSION } from "@opentele
 import PrismaInstrumentation from "@prisma/instrumentation";
 import * as Sentry from "@sentry/node";
 import type { HonoRequest } from "hono";
-import botConfig from "../../config/bot.config";
+import botConfig from "../../config/bot.config.js";
 
 function initSentry(): typeof Sentry & {
 	captureWithExtras(error: any, extras: Record<string, any>): Promise<string>;
@@ -147,6 +147,7 @@ const otel = new NodeSDK({
 otel.start();
 
 // Incase something goes wrong, take a look under the hood with:
+// import { diag, DiagConsoleLogger, DiagLogLevel } from "@opentelemetry/api";
 // diag.setLogger(new DiagConsoleLogger(), DiagLogLevel.DEBUG);
 
 export { sentry };
