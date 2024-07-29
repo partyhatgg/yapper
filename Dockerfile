@@ -10,12 +10,12 @@ WORKDIR /app
 FROM base AS prod-deps
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --prod --frozen-lockfile
 RUN pnpm translate
-RUN pnpm prisma migrate dev
+RUN pnpm prisma migrate deploy
 
 FROM base AS build
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
 RUN pnpm translate
-RUN pnpm prisma migrate dev
+RUN pnpm prisma migrate deploy
 RUN pnpm tsc
 
 FROM base
