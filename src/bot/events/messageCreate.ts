@@ -1,8 +1,9 @@
-import type { GatewayMessageCreateDispatchData, WithIntrinsicProps } from "@discordjs/core";
-import { GatewayDispatchEvents, MessageFlags } from "@discordjs/core";
+import type { APIMessage, GatewayMessageCreateDispatchData, WithIntrinsicProps } from "@discordjs/core";
+import { ButtonStyle, ComponentType, GatewayDispatchEvents, MessageFlags, RESTJSONErrorCodes } from "@discordjs/core";
 import EventHandler from "../../../lib/classes/EventHandler.js";
 import type ExtendedClient from "../../../lib/extensions/ExtendedClient.js";
 import Functions, { TranscriptionModel } from "../../../lib/utilities/functions.js";
+import { DiscordAPIError } from "@discordjs/rest";
 
 export default class MessageCreate extends EventHandler {
 	public constructor(client: ExtendedClient) {
@@ -38,11 +39,38 @@ export default class MessageCreate extends EventHandler {
 				this.client.config.allowedFileTypes.includes(attachment.content_type ?? ""),
 			)!;
 
-			const responseMessage = await this.client.api.channels.createMessage(message.channel_id, {
-				content: ":writing_hand: Transcribing, this may take a moment...",
-				message_reference: { message_id: message.id },
-				allowed_mentions: { parse: [] },
-			});
+			let responseMessage: APIMessage;
+
+			try {
+				responseMessage = await this.client.api.channels.createMessage(message.channel_id, {
+					content: ":writing_hand: Transcribing, this may take a moment...",
+					message_reference: { message_id: message.id },
+					allowed_mentions: { parse: [] },
+				});
+			} catch (error) {
+				if (
+					error instanceof DiscordAPIError &&
+					error.code === RESTJSONErrorCodes.CannotReplyWithoutPermissionToReadMessageHistory
+				) {
+					responseMessage = await this.client.api.channels.createMessage(message.channel_id, {
+						content: ":writing_hand: Transcribing, this may take a moment...",
+						allowed_mentions: { parse: [] },
+						components: [
+							{
+								components: [
+									{
+										type: ComponentType.Button,
+										style: ButtonStyle.Link,
+										url: `https://discord.com/channels/${message.guild_id ?? "@me"}/${message.channel_id}/${message.id}`,
+										label: "Transcribed Message",
+									},
+								],
+								type: ComponentType.ActionRow,
+							},
+						],
+					});
+				} else throw error;
+			}
 
 			const endpointHealth = await Functions.getEndpointHealth(TranscriptionModel.LARGEV3);
 
