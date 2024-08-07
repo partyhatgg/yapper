@@ -32,27 +32,27 @@
 		"@opentelemetry/sdk-metrics": "^1.25.1",
 		"@opentelemetry/sdk-node": "^0.52.1",
 		"@opentelemetry/semantic-conventions": "^1.25.1",
-		"@prisma/client": "^5.17.0",
-		"@prisma/instrumentation": "^5.17.0",
+		"@prisma/client": "^5.18.0",
+		"@prisma/instrumentation": "^5.18.0",
 		"@sapphire/bitfield": "^1.2.2",
 		"@sapphire/snowflake": "^3.5.3",
-		"@sentry/node": "^8.20.0",
-		"@sentry/opentelemetry": "^8.20.0",
+		"@sentry/node": "^8.24.0",
+		"@sentry/opentelemetry": "^8.24.0",
 		"@sentry/tracing": "^7.117.0",
 		"bufferutil": "^4.0.8",
 		"colorette": "^2.0.20",
 		"dotenv-extended": "^2.9.0",
-		"hono": "^4.5.3",
+		"hono": "^4.5.4",
 		"husky": "^9.1.4",
 		"i18next-intervalplural-postprocessor": "^3.0.0",
 		"i18next": "^23.12.2",
-		"stripe": "^16.5.0",
+		"stripe": "^16.6.0",
 		"utf-8-validate": "^6.0.4",
 		"zlib-sync": "^0.1.9"
 	},
 	"devDependencies": {
-		"@sentry/types": "^8.20.0",
-		"@types/node": "^22.0.0",
+		"@sentry/types": "^8.24.0",
+		"@types/node": "^22.1.0",
 		"@typescript-eslint/eslint-plugin": "^7.17.0",
 		"@typescript-eslint/parser": "^7.17.0",
 		"cross-env": "^7.0.3",
@@ -63,16 +63,15 @@
 		"eslint-plugin-import": "^2.29.1",
 		"eslint-plugin-prettier": "^5.2.1",
 		"eslint": "^8.57.0",
-		"lint-staged": "^15.2.7",
+		"lint-staged": "^15.2.8",
 		"prettier": "^3.3.3",
-		"prisma": "^5.17.0",
-		"tsx": "^4.16.2",
+		"prisma": "^5.18.0",
+		"tsx": "^4.16.5",
 		"typescript": "^5.5.4"
 	},
 	"pnpm": {
 		"overrides": {
-			"discord-api-types": "0.37.91",
-			"@discordjs/ws": "dev"
+			"discord-api-types": "0.37.93"
 		}
 	}
 }

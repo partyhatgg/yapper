@@ -26,6 +26,7 @@ export function logCommandUsage(command: ApplicationCommand | TextCommand, shard
 }
 
 export const approximateUserCountGauge = meter.createGauge("approximate_user_count");
+export const userInstallationGauge = meter.createGauge("user_installations");
 export const guildCountGauge = meter.createGauge("guild_count");
 export const guildGauge = meter.createGauge("guilds");
 
