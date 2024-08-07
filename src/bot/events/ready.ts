@@ -32,7 +32,7 @@ export default class Ready extends EventHandler {
 		userInstallationGauge.record((me as any).approximate_user_install_count);
 
 		this.client.logger.info(
-			`Logged in as ${data.user.username}#${data.user.discriminator} [${data.user.id}] on Shard ${shardId} with ${data.guilds.length} guilds and ${(me as any).approximate_user_install_count} installations.`,
+			`Logged in as ${data.user.username}#${data.user.discriminator} [${data.user.id}] on Shard ${shardId} with ${data.guilds.length} guilds and ${(me as any).approximate_user_install_count} user installations.`,
 		);
 
 		setInterval(() => {
@@ -43,7 +43,7 @@ export default class Ready extends EventHandler {
 		return this.client.logger.webhookLog("console", {
 			content: `${this.client.functions.generateTimestamp()} Logged in as ${data.user.username}#${
 				data.user.discriminator
-			} [\`${data.user.id}\`] on Shard ${shardId} with ${data.guilds.length} guilds and ${(me as any).approximate_user_install_count} installations.`,
+			} [\`${data.user.id}\`] on Shard ${shardId} with ${data.guilds.length} guilds and ${(me as any).approximate_user_install_count} user installations.`,
 			allowed_mentions: { parse: [] },
 			username: `${this.client.config.botName} | Console Logs`,
 		});
