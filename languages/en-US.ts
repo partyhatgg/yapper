@@ -116,6 +116,7 @@ export default {
 	PONG: "Pong! (Host latency of {{hostLatency}}ms)",
 
 	TRANSCRIBE_COMMAND_NAME: "Transcribe",
+	TRANSCRIBE_EPHEMERAL_COMMAND_NAME: "Transcribe Ephemeral",
 
 	PREMIUM_COMMAND_NAME: "premium",
 	PREMIUM_COMMAND_DESCRIPTION: "Manage Yapper premium.",
