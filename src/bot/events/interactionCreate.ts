@@ -1,6 +1,6 @@
 import type {
 	APIInteraction,
-	WithIntrinsicProps,
+	ToEventProps,
 	APIMessageComponentButtonInteraction,
 	APIMessageComponentSelectMenuInteraction,
 	APIMessageComponentInteraction,
@@ -20,7 +20,7 @@ export default class InteractionCreate extends EventHandler {
 	 *
 	 * https://discord.com/developers/docs/topics/gateway-events#interaction-create
 	 */
-	public override async run({ shardId, data }: WithIntrinsicProps<APIInteraction>) {
+	public override async run({ shardId, data }: ToEventProps<APIInteraction>) {
 		// This is very cursed, but it works.
 		const dd = data.data as any;
 

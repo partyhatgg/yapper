@@ -2,7 +2,7 @@ import { setTimeout } from "node:timers";
 import type {
 	APIMessageComponentButtonInteraction,
 	RESTPostAPIWebhookWithTokenJSONBody,
-	WithIntrinsicProps,
+	ToEventProps,
 } from "@discordjs/core";
 import { MessageFlags, RESTJSONErrorCodes } from "@discordjs/core";
 import { DiscordAPIError } from "@discordjs/rest";
@@ -88,7 +88,7 @@ export default class ButtonHandler {
 	public async handleButton({
 		data: interaction,
 		shardId,
-	}: Omit<WithIntrinsicProps<APIMessageComponentButtonInteraction>, "api">) {
+	}: Omit<ToEventProps<APIMessageComponentButtonInteraction>, "api">) {
 		const userLanguage = await this.client.prisma.userLanguage.findUnique({
 			where: {
 				userId: (interaction.member ?? interaction).user!.id,

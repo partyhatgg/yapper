@@ -2,7 +2,7 @@ import { setTimeout } from "node:timers";
 import type {
 	APIMessageComponentSelectMenuInteraction,
 	RESTPostAPIWebhookWithTokenJSONBody,
-	WithIntrinsicProps,
+	ToEventProps,
 } from "@discordjs/core";
 import { MessageFlags, RESTJSONErrorCodes } from "@discordjs/core";
 import { DiscordAPIError } from "@discordjs/rest";
@@ -88,7 +88,7 @@ export default class SelectMenuHandler {
 	public async handleSelectMenu({
 		data: interaction,
 		shardId,
-	}: Omit<WithIntrinsicProps<APIMessageComponentSelectMenuInteraction>, "api">) {
+	}: Omit<ToEventProps<APIMessageComponentSelectMenuInteraction>, "api">) {
 		const userLanguage = await this.client.prisma.userLanguage.findUnique({
 			where: {
 				userId: (interaction.member ?? interaction).user!.id,

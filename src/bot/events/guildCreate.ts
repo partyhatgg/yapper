@@ -1,4 +1,4 @@
-import type { GatewayGuildCreateDispatchData, WithIntrinsicProps } from "@discordjs/core";
+import type { GatewayGuildCreateDispatchData, ToEventProps } from "@discordjs/core";
 import { GatewayDispatchEvents } from "@discordjs/core";
 import EventHandler from "../../../lib/classes/EventHandler.js";
 import type ExtendedClient from "../../../lib/extensions/ExtendedClient.js";
@@ -13,7 +13,7 @@ export default class GuildCreate extends EventHandler {
 	 *
 	 * https://discord.com/developers/docs/topics/gateway-events#guild-create
 	 */
-	public override async run({ shardId, data }: WithIntrinsicProps<GatewayGuildCreateDispatchData>) {
+	public override async run({ shardId, data }: ToEventProps<GatewayGuildCreateDispatchData>) {
 		const guildRoles = new Map();
 
 		for (const guildRole of data.roles) guildRoles.set(guildRole.id, guildRole);

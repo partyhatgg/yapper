@@ -1,4 +1,4 @@
-import type { GatewayReadyDispatchData, WithIntrinsicProps } from "@discordjs/core";
+import type { GatewayReadyDispatchData, ToEventProps } from "@discordjs/core";
 import { GatewayDispatchEvents } from "@discordjs/core";
 import { setInterval } from "node:timers";
 import EventHandler from "../../../lib/classes/EventHandler.js";
@@ -20,9 +20,9 @@ export default class Ready extends EventHandler {
 	 *
 	 * https://discord.com/developers/docs/topics/gateway-events#ready
 	 */
-	public override async run({ shardId, data }: WithIntrinsicProps<GatewayReadyDispatchData>) {
+	public override async run({ data }: ToEventProps<GatewayReadyDispatchData>) {
 		guildCountGauge.record(data.guilds.length, {
-			shard: shardId,
+			shard: data.shard?.[0],
 		});
 
 		for (const guild of data.guilds) this.client.guildOwnersCache.set(guild.id, "");
@@ -32,7 +32,7 @@ export default class Ready extends EventHandler {
 		userInstallationGauge.record((me as any).approximate_user_install_count);
 
 		this.client.logger.info(
-			`Logged in as ${data.user.username}#${data.user.discriminator} [${data.user.id}] on Shard ${shardId} with ${data.guilds.length} guilds and ${(me as any).approximate_user_install_count} user installations.`,
+			`Logged in as ${data.user.username}#${data.user.discriminator} [${data.user.id}] on Shard ${data.shard?.[0]} with ${data.guilds.length} guilds and ${(me as any).approximate_user_install_count} user installations.`,
 		);
 
 		setInterval(() => {
@@ -43,7 +43,7 @@ export default class Ready extends EventHandler {
 		return this.client.logger.webhookLog("console", {
 			content: `${this.client.functions.generateTimestamp()} Logged in as ${data.user.username}#${
 				data.user.discriminator
-			} [\`${data.user.id}\`] on Shard ${shardId} with ${data.guilds.length} guilds and ${(me as any).approximate_user_install_count} user installations.`,
+			} [\`${data.user.id}\`] on Shard ${data.shard?.[0]} with ${data.guilds.length} guilds and ${(me as any).approximate_user_install_count} user installations.`,
 			allowed_mentions: { parse: [] },
 			username: `${this.client.config.botName} | Console Logs`,
 		});

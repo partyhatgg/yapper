@@ -1,5 +1,5 @@
 import { setTimeout } from "node:timers";
-import type { GatewayMessageCreateDispatchData, WithIntrinsicProps } from "@discordjs/core";
+import type { GatewayMessageCreateDispatchData, ToEventProps } from "@discordjs/core";
 import type ExtendedClient from "../extensions/ExtendedClient.js";
 import type Language from "./Language.js";
 import type TextCommand from "./TextCommand";
@@ -83,7 +83,7 @@ export default class TextCommandHandler {
 	public async handleTextCommand({
 		data: message,
 		shardId,
-	}: Omit<WithIntrinsicProps<GatewayMessageCreateDispatchData>, "api">) {
+	}: Omit<ToEventProps<GatewayMessageCreateDispatchData>, "api">) {
 		const validPrefix = this.client.config.prefixes.find((prefix) => message.content.startsWith(prefix));
 		if (!validPrefix) return;
 

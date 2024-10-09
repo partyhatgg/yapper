@@ -5,7 +5,7 @@ import type {
 	APIChatInputApplicationCommandInteraction,
 	APIInteractionDataResolved,
 	RESTPostAPIWebhookWithTokenJSONBody,
-	WithIntrinsicProps,
+	ToEventProps,
 } from "@discordjs/core";
 import {
 	ApplicationCommandOptionType,
@@ -198,7 +198,7 @@ export default class ApplicationCommandHandler {
 	public async handleApplicationCommand({
 		data: interaction,
 		shardId,
-	}: Omit<WithIntrinsicProps<APIApplicationCommandInteraction>, "api">) {
+	}: Omit<ToEventProps<APIApplicationCommandInteraction>, "api">) {
 		const userLanguage = await this.client.prisma.userLanguage.findUnique({
 			where: {
 				userId: (interaction.member ?? interaction).user!.id,

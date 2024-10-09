@@ -1,4 +1,4 @@
-import type { GatewayMessageDeleteDispatchData, WithIntrinsicProps } from "@discordjs/core";
+import type { GatewayMessageDeleteDispatchData, ToEventProps } from "@discordjs/core";
 import { GatewayDispatchEvents } from "@discordjs/core";
 import EventHandler from "../../../lib/classes/EventHandler.js";
 import type ExtendedClient from "../../../lib/extensions/ExtendedClient.js";
@@ -13,7 +13,7 @@ export default class MessageDelete extends EventHandler {
 	 *
 	 * https://discord.com/developers/docs/topics/gateway-events#message-delete
 	 */
-	public override async run({ data: message }: WithIntrinsicProps<GatewayMessageDeleteDispatchData>) {
+	public override async run({ data: message }: ToEventProps<GatewayMessageDeleteDispatchData>) {
 		const [transcription, job] = await Promise.all([
 			this.client.prisma.transcription.findUnique({
 				where: { initialMessageId: message.id },

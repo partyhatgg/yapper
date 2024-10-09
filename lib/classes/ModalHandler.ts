@@ -1,9 +1,5 @@
 import { setTimeout } from "node:timers";
-import type {
-	APIModalSubmitInteraction,
-	RESTPostAPIWebhookWithTokenJSONBody,
-	WithIntrinsicProps,
-} from "@discordjs/core";
+import type { APIModalSubmitInteraction, RESTPostAPIWebhookWithTokenJSONBody, ToEventProps } from "@discordjs/core";
 import { MessageFlags, RESTJSONErrorCodes } from "@discordjs/core";
 import { DiscordAPIError } from "@discordjs/rest";
 import type ExtendedClient from "../extensions/ExtendedClient.js";
@@ -85,7 +81,7 @@ export default class ModalHandler {
 	 * @param options.data The interaction data.
 	 * @param options.shardId The shard ID that the interaction was received on.
 	 */
-	public async handleModal({ data: interaction, shardId }: Omit<WithIntrinsicProps<APIModalSubmitInteraction>, "api">) {
+	public async handleModal({ data: interaction, shardId }: Omit<ToEventProps<APIModalSubmitInteraction>, "api">) {
 		const userLanguage = await this.client.prisma.userLanguage.findUnique({
 			where: {
 				userId: (interaction.member ?? interaction).user!.id,

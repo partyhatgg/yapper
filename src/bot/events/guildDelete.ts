@@ -1,4 +1,4 @@
-import type { GatewayGuildDeleteDispatchData, WithIntrinsicProps } from "@discordjs/core";
+import type { GatewayGuildDeleteDispatchData, ToEventProps } from "@discordjs/core";
 import { GatewayDispatchEvents } from "@discordjs/core";
 import EventHandler from "../../../lib/classes/EventHandler.js";
 import type ExtendedClient from "../../../lib/extensions/ExtendedClient.js";
@@ -13,7 +13,7 @@ export default class GuildDelete extends EventHandler {
 	 *
 	 * https://discord.com/developers/docs/topics/gateway-events#guild-delete
 	 */
-	public override async run({ shardId, data }: WithIntrinsicProps<GatewayGuildDeleteDispatchData>) {
+	public override async run({ shardId, data }: ToEventProps<GatewayGuildDeleteDispatchData>) {
 		if (data.unavailable) return;
 
 		this.client.guildRolesCache.delete(data.id);

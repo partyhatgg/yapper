@@ -1,4 +1,4 @@
-import type { APIMessage, GatewayMessageCreateDispatchData, WithIntrinsicProps } from "@discordjs/core";
+import type { APIMessage, GatewayMessageCreateDispatchData, ToEventProps } from "@discordjs/core";
 import { ButtonStyle, ComponentType, GatewayDispatchEvents, MessageFlags, RESTJSONErrorCodes } from "@discordjs/core";
 import EventHandler from "../../../lib/classes/EventHandler.js";
 import type ExtendedClient from "../../../lib/extensions/ExtendedClient.js";
@@ -15,7 +15,7 @@ export default class MessageCreate extends EventHandler {
 	 *
 	 * https://discord.com/developers/docs/topics/gateway-events#message-create
 	 */
-	public override async run({ shardId, data: message }: WithIntrinsicProps<GatewayMessageCreateDispatchData>) {
+	public override async run({ shardId, data: message }: ToEventProps<GatewayMessageCreateDispatchData>) {
 		if (message.author.bot) return;
 
 		if (message.guild_id && (message.flags ?? 0) & MessageFlags.IsVoiceMessage) {

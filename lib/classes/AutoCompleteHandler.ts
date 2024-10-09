@@ -1,7 +1,7 @@
 import type {
 	APIApplicationCommandAutocompleteInteraction,
 	APIInteractionDataResolved,
-	WithIntrinsicProps,
+	ToEventProps,
 } from "@discordjs/core";
 import { ApplicationCommandOptionType } from "@discordjs/core";
 import type { APIInteractionWithArguments, InteractionArguments } from "../../typings";
@@ -75,7 +75,7 @@ export default class AutoCompleteHandler {
 	public async handleAutoComplete({
 		data: interaction,
 		shardId,
-	}: Omit<WithIntrinsicProps<APIApplicationCommandAutocompleteInteraction>, "api">) {
+	}: Omit<ToEventProps<APIApplicationCommandAutocompleteInteraction>, "api">) {
 		const name = [interaction.data.name];
 
 		const applicationCommandArguments = {
