@@ -337,7 +337,7 @@ export default class Functions {
 	 * @param job The Prima Job to get the status of.
 	 * @returns The status of the RunPod job.
 	 */
-	public static async getJobStatus(job: Job) {
+	public static async getJobStatus(job: Job): Promise<RunResponse | RunPodRunSyncResponse | null> {
 		const response = await fetch(`https://api.runpod.ai/v2/${this.getEndpointIdFromJob(job)}/status/${job.id}`, {
 			method: "GET",
 			headers: {

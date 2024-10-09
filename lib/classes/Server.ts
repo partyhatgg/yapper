@@ -150,7 +150,7 @@ export default class Server {
 						}
 
 						if (jobStatus.status === TranscriptionState.COMPLETED) {
-							Logger.info(`Job ${jobStatus.id} marked completed via polling`);
+							Logger.info(`Job ${job.id} discovered via polling.`);
 							return fetch(`http://127.0.0.1:${this.port}/job_complete?secret=${env.SECRET}`, {
 								method: "POST",
 								body: JSON.stringify(jobStatus),
@@ -368,11 +368,17 @@ export default class Server {
 					}
 				}
 
-				Logger.info(`Job ${job.id} marked completed`);
+				Logger.info(
+					`Job ${job.id} marked completed using ${body.output.model} model. Execution took ${body.delayTime + body.executionTime}ms.`,
+				);
 				return context.text("Success");
 			}
 
 			await this.prisma.job.delete({ where: { id: job.id } });
+
+			Logger.info(
+				`Job ${job.id} marked completed using ${body.output.model} model. Execution took ${body.delayTime + body.executionTime}ms.`,
+			);
 
 			if (body.output.model === TranscriptionModel.MEDIUM) {
 				const newJob = await Functions.transcribeAudio(job.attachmentUrl, "run", TranscriptionModel.LARGEV3);
@@ -449,7 +455,6 @@ export default class Server {
 							}),
 				]);
 
-				Logger.info(`Job ${job.id} marked completed`);
 				return context.text("Success");
 			}
 		});
