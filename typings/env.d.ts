@@ -3,8 +3,6 @@ declare global {
 		interface ProcessEnv {
 			APPLICATION_ID: string;
 			BASE_URL: string;
-			CHATTER_API_KEY: string;
-			CHATTER_URL: string;
 			CLIENT_SECRET: string;
 			CONSOLE_HOOK: string;
 			DATABASE_URL: string;

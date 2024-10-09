@@ -135,6 +135,7 @@ export default class Server {
 						if (!jobStatus) return this.prisma.job.delete({ where: { id: job.id } });
 
 						if (jobStatus.status === TranscriptionState.FAILED) {
+							Logger.info(`Job ${jobStatus.id} marked failed via polling`);
 							if (job.interactionId) {
 								await this.discordApi.interactions.editReply(env.APPLICATION_ID, job.interactionToken!, {
 									content: "Sorry, this transcription failed.",
@@ -149,6 +150,7 @@ export default class Server {
 						}
 
 						if (jobStatus.status === TranscriptionState.COMPLETED) {
+							Logger.info(`Job ${jobStatus.id} marked completed via polling`);
 							return fetch(`http://127.0.0.1:${this.port}/job_complete?secret=${env.SECRET}`, {
 								method: "POST",
 								body: JSON.stringify(jobStatus),
@@ -366,6 +368,7 @@ export default class Server {
 					}
 				}
 
+				Logger.info(`Job ${job.id} marked completed`);
 				return context.text("Success");
 			}
 
@@ -446,6 +449,7 @@ export default class Server {
 							}),
 				]);
 
+				Logger.info(`Job ${job.id} marked completed`);
 				return context.text("Success");
 			}
 		});
