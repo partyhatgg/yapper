@@ -125,7 +125,7 @@ export default class Server {
 		});
 
 		setInterval(async () => {
-			const jobs = await this.prisma.job.findMany({});
+			const jobs = await this.prisma.job.findMany();
 
 			return Promise.all(
 				jobs
