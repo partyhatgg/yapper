@@ -394,7 +394,7 @@ export default class Functions {
 					temperature: 0,
 				},
 				enable_vad: false,
-				webhook: `${env.BASE_URL}/job_complete${env.SECRET}`,
+				webhook: `${env.BASE_URL}/job_complete?secret=${env.SECRET}`,
 			}),
 			headers: {
 				"Content-Type": "application/json",
