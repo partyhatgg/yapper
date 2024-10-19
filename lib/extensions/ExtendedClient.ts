@@ -207,7 +207,6 @@ export default class ExtendedClient extends Client {
 		if (env.NODE_ENV === "development") {
 			this.prisma.$use(async (params, next) => {
 				const before = Date.now();
-				// eslint-disable-next-line n/callback-return
 				const result = await next(params);
 				const after = Date.now();
 

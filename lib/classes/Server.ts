@@ -96,7 +96,6 @@ export default class Server {
 
 			this.prisma.$use(async (params, next) => {
 				const before = Date.now();
-				// eslint-disable-next-line n/callback-return
 				const result = await next(params);
 				const after = Date.now();
 
@@ -113,7 +112,6 @@ export default class Server {
 	public async start() {
 		this.registerRoutes();
 
-		// eslint-disable-next-line promise/prefer-await-to-callbacks
 		serve({ fetch: this.router.fetch, port: this.port }, (info) => {
 			// if (error) {
 			// 	Logger.error(error);

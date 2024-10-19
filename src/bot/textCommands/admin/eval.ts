@@ -85,6 +85,7 @@ export default class Eval extends TextCommand {
 	}
 
 	private async eval(message: GatewayMessageCreateDispatchData, code: string) {
+		// biome-ignore lint/style/noParameterAssign: sanitizing
 		code = code.replaceAll(/[“”]/g, '"').replaceAll(/[‘’]/g, "'");
 		const stopwatch = new StopWatch();
 		let success;
@@ -94,8 +95,9 @@ export default class Eval extends TextCommand {
 		let thenable = false;
 		let type;
 		try {
+			// biome-ignore lint/style/noParameterAssign: formatting
 			if (message.content.includes("--async")) code = `(async () => {\n${code}\n})();`;
-			// eslint-disable-next-line no-eval
+			// biome-ignore lint/security/noGlobalEval: this is the eval command
 			result = eval(code);
 			syncTime = stopwatch.toString();
 			type = new Type(result);

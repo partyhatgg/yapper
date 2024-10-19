@@ -1,6 +1,6 @@
+import { setInterval } from "node:timers";
 import type { GatewayReadyDispatchData, ToEventProps } from "@discordjs/core";
 import { GatewayDispatchEvents } from "@discordjs/core";
-import { setInterval } from "node:timers";
 import EventHandler from "../../../lib/classes/EventHandler.js";
 import type ExtendedClient from "../../../lib/extensions/ExtendedClient.js";
 import {

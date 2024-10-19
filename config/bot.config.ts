@@ -22,7 +22,6 @@ export default {
 	/**
 	 * The bot's current version, this is the first 7 characters of the current Git commit hash.
 	 */
-	// eslint-disable-next-line n/no-sync
 	version: env.NODE_ENV === "production" ? execSync("git rev-parse --short HEAD").toString().trim() : "dev",
 
 	/**

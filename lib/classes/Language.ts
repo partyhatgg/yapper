@@ -40,13 +40,8 @@ export default class Language {
 	public constructor(
 		client: ExtendedClient,
 		id: LocaleString,
-		options: { enabled: boolean; language?: LanguageOptions },
+		options: { enabled: boolean; language?: LanguageOptions } = { enabled: true },
 	) {
-		if (!options)
-			options = {
-				enabled: true,
-			};
-
 		this.id = id;
 		this.client = client;
 
@@ -93,7 +88,7 @@ export default class Language {
 		if (args && !("interpolation" in args)) args.interpolation = { escapeValue: false };
 
 		if (!this.enabled) return this.client.i18n.t(key, { ...args });
-		else if (!this.has(key)) return `"${key} has not been localized for any languages yet."`;
+		if (!this.has(key)) return `"${key} has not been localized for any languages yet."`;
 		return this.client.i18n.t(key, { ...args, lng: this.id });
 	}
 }

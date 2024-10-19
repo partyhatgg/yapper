@@ -2,7 +2,7 @@ import type { LocaleString } from "@discordjs/core";
 import type { TOptions } from "i18next";
 import type { LanguageValues } from "../../typings/language.js";
 import type ExtendedClient from "../extensions/ExtendedClient.js";
-import type { LanguageOptions, LanguageKeys } from "./Language.js";
+import type { LanguageKeys, LanguageOptions } from "./Language.js";
 import Language from "./Language.js";
 
 export default class LanguageHandler {

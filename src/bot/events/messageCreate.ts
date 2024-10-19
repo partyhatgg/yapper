@@ -1,9 +1,9 @@
 import type { APIMessage, GatewayMessageCreateDispatchData, ToEventProps } from "@discordjs/core";
 import { ButtonStyle, ComponentType, GatewayDispatchEvents, MessageFlags, RESTJSONErrorCodes } from "@discordjs/core";
+import { DiscordAPIError } from "@discordjs/rest";
 import EventHandler from "../../../lib/classes/EventHandler.js";
 import type ExtendedClient from "../../../lib/extensions/ExtendedClient.js";
 import Functions, { TranscriptionModel } from "../../../lib/utilities/functions.js";
-import { DiscordAPIError } from "@discordjs/rest";
 
 export default class MessageCreate extends EventHandler {
 	public constructor(client: ExtendedClient) {

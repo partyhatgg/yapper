@@ -1,9 +1,9 @@
 import type {
 	APIInteraction,
-	ToEventProps,
 	APIMessageComponentButtonInteraction,
-	APIMessageComponentSelectMenuInteraction,
 	APIMessageComponentInteraction,
+	APIMessageComponentSelectMenuInteraction,
+	ToEventProps,
 } from "@discordjs/core";
 import { ComponentType, GatewayDispatchEvents, InteractionContextType, InteractionType } from "@discordjs/core";
 import EventHandler from "../../../lib/classes/EventHandler.js";

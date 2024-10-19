@@ -4,7 +4,6 @@ export default {
 	LANGUAGE_NAME: "English, US",
 
 	PARSE_REGEX:
-		// eslint-disable-next-line unicorn/no-unsafe-regex, prefer-named-capture-group
 		/^(-?(?:\d+)?\.?\d+) *(m(?:illiseconds?|s(?:ecs?)?))?(s(?:ec(?:onds?|s)?)?)?(m(?:in(?:utes?|s)?)?)?(h(?:ours?|rs?)?)?(d(?:ays?)?)?(w(?:eeks?|ks?)?)?(y(?:ears?|rs?)?)?$/,
 	MS_OTHER: "ms",
 	SECOND_ONE: "second",
@@ -136,7 +135,8 @@ export default {
 	PREMIUM_INFO_TITLE: "Yapper Premium",
 	PREMIUM_INFO_DESCRIPTION:
 		"Yapper Premium offers transcriptions of audio and video attachments, removal of the five minute content length limit, as well as higher quality transcriptions. Subscribe to a plan by choosing one from the dropdown below!{{subscriptionInfo}}",
-	SUBSCRIPTION_INFO: `\n\nYou are currently subscribed to Yapper Premium and have {{appliedGuildCount}}/{{maxGuildCount}} active premium guilds. Your subscription will renew on {{date}}!`,
+	SUBSCRIPTION_INFO:
+		"\n\nYou are currently subscribed to Yapper Premium and have {{appliedGuildCount}}/{{maxGuildCount}} active premium guilds. Your subscription will renew on {{date}}!",
 
 	CONFIG_COMMAND_NAME: "config",
 	CONFIG_COMMAND_DESCRIPTION: "Configure Yapper for your server.",

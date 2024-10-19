@@ -94,12 +94,11 @@ export class Logger {
 	 * Log a message to Discord through a webhook.
 	 *
 	 * @param type The webhook type to log out to, make sure that the webhook provided in your .env file is in the format ${TYPE}_HOOK=...
-	 * @param options The options for the message we want to send with the webhook.
 	 * @returns The message that was sent.
 	 */
 	public async webhookLog(type: string, options: RESTPostAPIWebhookWithTokenJSONBody) {
 		if (!type) throw new Error("No webhook type has been provided!");
-		else if (!this.webhooks.get(type.toLowerCase())) {
+		if (!this.webhooks.get(type.toLowerCase())) {
 			const webhookURL = env[`${type.toUpperCase()}_HOOK`];
 			if (!webhookURL) {
 				this.warn(`No webhook URL has been provided for ${type}!`);

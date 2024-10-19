@@ -90,7 +90,6 @@ export default class ApplicationCommandHandler {
 			return Promise.all([
 				this.client.api.applicationCommands
 					.bulkOverwriteGuildCommands(env.APPLICATION_ID, env.DEVELOPMENT_GUILD_ID, [])
-					// eslint-disable-next-line promise/prefer-await-to-callbacks, promise/prefer-await-to-then
 					.catch(async (error) => {
 						if (error instanceof DiscordAPIError && error.code === RESTJSONErrorCodes.MissingAccess)
 							this.client.logger.error(
@@ -118,7 +117,6 @@ export default class ApplicationCommandHandler {
 							guildId,
 							applicationCommands.map((applicationCommand) => applicationCommand.options),
 						)
-						// eslint-disable-next-line promise/prefer-await-to-callbacks, promise/prefer-await-to-then
 						.catch(async (error) => {
 							if (error instanceof DiscordAPIError && error.code === RESTJSONErrorCodes.MissingAccess)
 								this.client.logger.error(
@@ -137,30 +135,27 @@ export default class ApplicationCommandHandler {
 			]);
 		}
 
-		return (
-			this.client.api.applicationCommands
-				.bulkOverwriteGuildCommands(
-					env.APPLICATION_ID,
-					env.DEVELOPMENT_GUILD_ID,
-					[...this.client.applicationCommands.values()].map((applicationCommand) => applicationCommand.options),
-				)
-				// eslint-disable-next-line promise/prefer-await-to-callbacks, promise/prefer-await-to-then
-				.catch(async (error) => {
-					if (error instanceof DiscordAPIError && error.code === RESTJSONErrorCodes.MissingAccess)
-						this.client.logger.error(
-							null,
-							`I encountered DiscordAPIError: Missing Access in ${env.DEVELOPMENT_GUILD_ID} when trying to set application commands in the test guild.`,
-						);
+		return this.client.api.applicationCommands
+			.bulkOverwriteGuildCommands(
+				env.APPLICATION_ID,
+				env.DEVELOPMENT_GUILD_ID,
+				[...this.client.applicationCommands.values()].map((applicationCommand) => applicationCommand.options),
+			)
+			.catch(async (error) => {
+				if (error instanceof DiscordAPIError && error.code === RESTJSONErrorCodes.MissingAccess)
+					this.client.logger.error(
+						null,
+						`I encountered DiscordAPIError: Missing Access in ${env.DEVELOPMENT_GUILD_ID} when trying to set application commands in the test guild.`,
+					);
 
-					await this.client.logger.sentry.captureWithExtras(error, {
-						"Guild ID": env.DEVELOPMENT_GUILD_ID,
-						"Application Command Count": this.client.applicationCommands.size,
-						"Application Commands": this.client.applicationCommands,
-					});
+				await this.client.logger.sentry.captureWithExtras(error, {
+					"Guild ID": env.DEVELOPMENT_GUILD_ID,
+					"Application Command Count": this.client.applicationCommands.size,
+					"Application Commands": this.client.applicationCommands,
+				});
 
-					throw error;
-				})
-		);
+				throw error;
+			});
 	}
 
 	/**

@@ -1,4 +1,3 @@
-/* eslint-disable n/no-sync */
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readdirSync } from "node:fs";
 import { env } from "node:process";
@@ -79,17 +78,16 @@ export default class Functions {
 	 * @returns The parsed value.
 	 */
 	public parse(input: string, language?: Language) {
+		// biome-ignore lint/style/noParameterAssign: define language if it's not defined
 		if (!language) language = this.client.languageHandler.getLanguage("en-US");
 
 		const RGX =
-			// eslint-disable-next-line unicorn/no-unsafe-regex, prefer-named-capture-group
 			/^(-?(?:\d+)?\.?\d+) *(m(?:illiseconds?|s(?:ecs?)?))?(s(?:ec(?:onds?|s)?)?)?(m(?:in(?:utes?|s)?)?)?(h(?:ours?|rs?)?)?(d(?:ays?)?)?(w(?:eeks?|ks?)?)?(y(?:ears?|rs?)?)?$/;
 		// language.get("PARSE_REGEX");
 
-		// eslint-disable-next-line @typescript-eslint/prefer-regexp-exec
 		const arr = input.toLowerCase().match(RGX);
 		let num: number;
-		// eslint-disable-next-line no-cond-assign
+		// biome-ignore lint/suspicious/noAssignInExpressions:
 		if (arr !== null && (num = Number.parseFloat(arr[1] || ""))) {
 			if (arr[3] !== null) return num * this.SEC;
 			if (arr[4] !== null) return num * this.MIN;
@@ -134,6 +132,7 @@ export default class Functions {
 	 * @returns The formatting count.
 	 */
 	public format(milli: number, long = true, language?: Language) {
+		// biome-ignore lint/style/noParameterAssign: define language if it's not defined
 		if (!language) language = this.client.languageHandler.defaultLanguage!;
 
 		const prefix = milli < 0 ? "-" : "";
@@ -174,7 +173,6 @@ export default class Functions {
 	 * @param options.type The type of timestamp to generate, defaults to "f".
 	 * @return The generated timestamp.
 	 */
-	// eslint-disable-next-line sonarjs/no-identical-functions
 	public static generateTimestamp(options?: {
 		timestamp?: Date | number;
 		type?: "D" | "d" | "F" | "f" | "R" | "T" | "t";
@@ -295,9 +293,8 @@ export default class Functions {
 	public static getEndpointIdFromJob(job: Job) {
 		if (job.model === TranscriptionModel.LARGEV3) {
 			return env.RUNPOD_HQ_ENDPOINT_ID;
-		} else {
-			return env.RUNPOD_LQ_ENDPOINT_ID;
 		}
+		return env.RUNPOD_LQ_ENDPOINT_ID;
 	}
 
 	/**
@@ -309,9 +306,8 @@ export default class Functions {
 	public static getEndpointIdFromModel(model: TranscriptionModel) {
 		if (model === TranscriptionModel.LARGEV3) {
 			return env.RUNPOD_HQ_ENDPOINT_ID;
-		} else {
-			return env.RUNPOD_LQ_ENDPOINT_ID;
 		}
+		return env.RUNPOD_LQ_ENDPOINT_ID;
 	}
 
 	/**
@@ -320,7 +316,7 @@ export default class Functions {
 	 * @returns The status of the RunPod endpoint.
 	 */
 	public static async getEndpointHealth(endpoint: TranscriptionModel) {
-		const response = await fetch(`https://api.runpod.ai/v2/${this.getEndpointIdFromModel(endpoint)}/health`, {
+		const response = await fetch(`https://api.runpod.ai/v2/${Functions.getEndpointIdFromModel(endpoint)}/health`, {
 			method: "GET",
 			headers: {
 				"Content-Type": "application/json",
@@ -338,7 +334,7 @@ export default class Functions {
 	 * @returns The status of the RunPod job.
 	 */
 	public static async getJobStatus(job: Job): Promise<RunResponse | RunPodRunSyncResponse | null> {
-		const response = await fetch(`https://api.runpod.ai/v2/${this.getEndpointIdFromJob(job)}/status/${job.id}`, {
+		const response = await fetch(`https://api.runpod.ai/v2/${Functions.getEndpointIdFromJob(job)}/status/${job.id}`, {
 			method: "GET",
 			headers: {
 				"Content-Type": "application/json",
@@ -383,24 +379,27 @@ export default class Functions {
 		model: TranscriptionModel,
 		translate = false,
 	) {
-		const response = await fetch(`https://api.runpod.ai/v2/${this.getEndpointIdFromModel(model)}/${endpointType}`, {
-			method: "POST",
-			body: JSON.stringify({
-				input: {
-					audio: attachmentUrl,
-					model,
-					transcription: "plain_text",
-					translate,
-					temperature: 0,
+		const response = await fetch(
+			`https://api.runpod.ai/v2/${Functions.getEndpointIdFromModel(model)}/${endpointType}`,
+			{
+				method: "POST",
+				body: JSON.stringify({
+					input: {
+						audio: attachmentUrl,
+						model,
+						transcription: "plain_text",
+						translate,
+						temperature: 0,
+					},
+					enable_vad: false,
+					webhook: `${env.BASE_URL}/job_complete?secret=${env.SECRET}`,
+				}),
+				headers: {
+					"Content-Type": "application/json",
+					Authorization: `Bearer ${env.RUNPOD_API_KEY}`,
 				},
-				enable_vad: false,
-				webhook: `${env.BASE_URL}/job_complete?secret=${env.SECRET}`,
-			}),
-			headers: {
-				"Content-Type": "application/json",
-				Authorization: `Bearer ${env.RUNPOD_API_KEY}`,
 			},
-		});
+		);
 
 		const data: RunPodRunSyncResponse = await response.json();
 

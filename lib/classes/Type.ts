@@ -78,9 +78,8 @@ export default class Type {
 	 * Walks the linked list backwards, for checking circulars.
 	 */
 	private *parents() {
-		// eslint-disable-next-line consistent-this, @typescript-eslint/no-this-alias, unicorn/no-this-assignment
 		let current: Type | undefined = this;
-		// eslint-disable-next-line no-cond-assign
+		// biome-ignore lint/suspicious/noAssignInExpressions:
 		while ((current = this.parent)) yield current;
 	}
 
@@ -126,7 +125,6 @@ export default class Type {
 	 * Joins the list of child types.
 	 */
 	private static list(values: Map<string, Type>): string {
-		// eslint-disable-next-line @typescript-eslint/require-array-sort-compare
 		return values.has("any") ? "any" : [...values.values()].sort().join(" | ");
 	}
 }

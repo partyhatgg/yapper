@@ -37,5 +37,5 @@ export default class AutoComplete {
 		interaction: APIInteractionWithArguments<APIApplicationCommandAutocompleteInteraction>;
 		language: Language;
 		shardId: number;
-	}): Promise<any> {}
+	}) {}
 }

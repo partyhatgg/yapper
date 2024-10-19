@@ -17,9 +17,7 @@ for (const [key, value] of Object.entries(enUS)) {
 
 writeFile(
 	"./typings/language.d.ts",
-	`/* eslint-disable typescript-sort-keys/interface */\n\nexport interface LanguageValues {\n${[
-		...interfaceMap.entries(),
-	]
+	`export interface LanguageValues {\n${[...interfaceMap.entries()]
 		.map(([key, value]) => `${key}: {${[...new Set(value)].map((val) => `${val}: any`).join(", ")}}`)
 		.join(",\n")}\n}`,
 	() => {},

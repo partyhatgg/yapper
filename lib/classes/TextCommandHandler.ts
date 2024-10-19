@@ -1,9 +1,9 @@
 import { setTimeout } from "node:timers";
 import type { GatewayMessageCreateDispatchData, ToEventProps } from "@discordjs/core";
 import type ExtendedClient from "../extensions/ExtendedClient.js";
+import { logCommandUsage } from "../utilities/metrics.js";
 import type Language from "./Language.js";
 import type TextCommand from "./TextCommand";
-import { logCommandUsage } from "../utilities/metrics.js";
 
 export default class TextCommandHandler {
 	/**
