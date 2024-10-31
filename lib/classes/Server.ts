@@ -193,7 +193,7 @@ export default class Server {
 			if (body.output.transcription.length > 2_000) {
 				const message = job.interactionId
 					? await this.discordApi.interactions.getOriginalReply(env.APPLICATION_ID, job.interactionToken!)
-					: await this.discordApi.channels.getMessage(job.channelId!, job.initialMessageId);
+					: await this.discordApi.channels.getMessage(job.channelId!, job.responseMessageId);
 
 				const splitTranscription = body.output.transcription.match(/.{1,1996}/g);
 				if (!splitTranscription) {
