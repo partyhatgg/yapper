@@ -17,7 +17,7 @@ export default {
 	/**
 	 * A list of file types that the bot will transcribe.
 	 */
-	allowedFileTypes: ["audio/ogg", "audio/mpeg", "video/mp4", "video/webm", "video/quicktime"],
+	allowedFileTypes: ["audio/ogg", "audio/mpeg", "audio/mp4", "video/mp4", "video/webm", "video/quicktime"],
 
 	/**
 	 * The bot's current version, this is the first 7 characters of the current Git commit hash.
