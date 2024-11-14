@@ -2,6 +2,8 @@
 
 Welcome to the repository for Yapper, a Discord bot created to transcribe Discord voice messages.
 
+If you'd like to add Yapper to your own server instead of self hosting it, click [here](https://discord.com/oauth2/authorize?client_id=1189388666699788349).
+
 ## Self Hosting
 
 ### Running with Docker:
