@@ -17,7 +17,7 @@ export enum TranscriptionState {
 }
 
 export enum TranscriptionModel {
-	LARGEV3 = "large-v3-turbo",
+	LARGEV3 = "turbo",
 	MEDIUM = "medium",
 }
 
