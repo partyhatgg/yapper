@@ -12,25 +12,7 @@ import type ExtendedClient from "../../../../lib/extensions/ExtendedClient.js";
 import Functions, { TranscriptionModel } from "../../../../lib/utilities/functions.js";
 import type { APIInteractionWithArguments } from "../../../../typings/index";
 
-export default class TranscribeContextMenu extends ApplicationCommand {
-	/**
-	 * Create our transcribe context menu command.
-	 *
-	 * @param client - Our extended client.
-	 */
-	public constructor(client: ExtendedClient) {
-		super(client, {
-			options: {
-				...client.languageHandler.generateLocalizationsForApplicationCommandOptionTypeStringWithChoices({
-					name: "TRANSCRIBE_COMMAND_NAME",
-				}),
-				type: ApplicationCommandType.Message,
-				integration_types: [ApplicationIntegrationType.GuildInstall, ApplicationIntegrationType.UserInstall],
-				contexts: [0, 1, 2],
-			},
-		});
-	}
-
+export class BaseTranscribeContextMenu extends ApplicationCommand {
 	/**
 	 * Run this application command.
 	 *
@@ -42,10 +24,12 @@ export default class TranscribeContextMenu extends ApplicationCommand {
 	public override async run({
 		interaction,
 		language,
+		ephemeral,
 	}: {
 		interaction: APIInteractionWithArguments<APIMessageApplicationCommandInteraction>;
 		language: Language;
 		shardId: number;
+		ephemeral: boolean;
 	}) {
 		const message = interaction.data.resolved.messages[interaction.data.target_id];
 
@@ -139,6 +123,7 @@ export default class TranscribeContextMenu extends ApplicationCommand {
 		await this.client.api.interactions.reply(interaction.id, interaction.token, {
 			content: language.get("TRANSCRIBING"),
 			allowed_mentions: { parse: [] },
+			...(ephemeral && { flags: MessageFlags.Ephemeral }),
 		});
 
 		const endpointHealth = await Functions.getEndpointHealth(TranscriptionModel.LARGEV3);
@@ -163,5 +148,37 @@ export default class TranscribeContextMenu extends ApplicationCommand {
 				responseMessageId: reply.id,
 			},
 		});
+	}
+}
+
+export default class TranscribeContextMenu extends BaseTranscribeContextMenu {
+	/**
+	 * Create our transcribe context menu command.
+	 *
+	 * @param client - Our extended client.
+	 */
+	public constructor(client: ExtendedClient) {
+		super(client, {
+			options: {
+				...client.languageHandler.generateLocalizationsForApplicationCommandOptionTypeStringWithChoices({
+					name: "TRANSCRIBE_COMMAND_NAME",
+				}),
+				type: ApplicationCommandType.Message,
+				integration_types: [ApplicationIntegrationType.GuildInstall, ApplicationIntegrationType.UserInstall],
+				contexts: [0, 1, 2],
+			},
+		});
+	}
+
+	public override async run({
+		interaction,
+		language,
+		shardId,
+	}: {
+		interaction: APIInteractionWithArguments<APIMessageApplicationCommandInteraction>;
+		language: Language;
+		shardId: number;
+	}) {
+		return super.run({ interaction, language, shardId, ephemeral: false });
 	}
 }
