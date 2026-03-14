@@ -1,0 +1,1 @@
+ALTER TABLE "transcriptions" ADD COLUMN IF NOT EXISTS "reply_message_id" text;

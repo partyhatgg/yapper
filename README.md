@@ -52,7 +52,7 @@ PORT=3000                     # Hono server port
 # Runpod
 RUNPOD_ENDPOINT_ID=           # Async endpoint ID (LARGEV3/turbo)
 RUNPOD_API_KEY=               # Runpod API key
-BASE_URL=                     # Publicly reachable URL for Runpod webhooks
+CALLBACK_URL=                 # Publicly reachable base URL of this server (used for Runpod webhooks)
 
 # Observability (optional)
 OTEL_EXPORTER_OTLP_ENDPOINT=  # OTLP collector endpoint
@@ -63,33 +63,33 @@ GUILD_LOG_WEBHOOK_URL=        # Discord webhook for guild join/leave logs
 
 ```bash
 pnpm install
-pnpm run migrate
+pnpm migrate
 pnpm run dev
 ```
 
 ### Production
 
 ```bash
-pnpm run build
+pnpm build
 pnpm start
 ```
 
 ## Development
 
 ```bash
-pnpm run dev
+pnpm dev
 ```
 
 ### Local Database
 
 ```bash
-docker run -e POSTGRES_PASSWORD=mysecretpassword -p 5432:5432 -d postgres
+docker run --name mydb -e POSTGRES_PASSWORD=mysecretpassword -p 5432:5432 -d postgres
 ```
 
 Then run migrations:
 
 ```bash
-pnpm run migrate
+pnpm migrate
 ```
 
 ### Local Webhook Tunnel
@@ -98,4 +98,4 @@ Runpod needs a publicly reachable URL to POST transcription results back to. Use
 
 https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/get-started/create-local-tunnel
 
-Set `BASE_URL` in your `.env` to the tunnel URL.
+Set `CALLBACK_URL` in your `.env` to the tunnel's base URL (e.g. `https://<tunnel-subdomain>.trycloudflare.com`).

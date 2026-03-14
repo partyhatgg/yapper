@@ -1,11 +1,13 @@
+import { env } from "node:process"
+
 export interface RunpodJobResponse {
   id: string
-  status: "IN_QUEUE" | "IN_PROGRESS" | "COMPLETED" | "FAILED" | "CANCELLED"
+  status: string
 }
 
-export interface RunpodWebhookPayload {
+export interface RunpodJobStatus {
   id: string
-  status: "COMPLETED" | "FAILED" | "CANCELLED"
+  status: "IN_QUEUE" | "IN_PROGRESS" | "COMPLETED" | "FAILED" | "CANCELLED"
   output?: {
     transcription: string
     detected_language?: string
@@ -16,14 +18,15 @@ export interface RunpodWebhookPayload {
 }
 
 export async function submitRunpodJob(attachmentUrl: string): Promise<RunpodJobResponse> {
-  const endpointId = process.env.RUNPOD_ENDPOINT_ID
-  const webhookUrl = `${process.env.BASE_URL}/webhook/runpod`
+  const endpointId = env.RUNPOD_ENDPOINT_ID
+  const webhookUrl = `${env.CALLBACK_URL}/webhook/runpod`
 
   const response = await fetch(`https://api.runpod.ai/v2/${endpointId}/run`, {
+    signal: AbortSignal.timeout(10_000),
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${process.env.RUNPOD_API_KEY}`
+      Authorization: `Bearer ${env.RUNPOD_API_KEY}`
     },
     body: JSON.stringify({
       input: {
@@ -42,4 +45,18 @@ export async function submitRunpodJob(attachmentUrl: string): Promise<RunpodJobR
   }
 
   return response.json() as Promise<RunpodJobResponse>
+}
+
+export async function getRunpodJobStatus(jobId: string): Promise<RunpodJobStatus> {
+  const endpointId = env.RUNPOD_ENDPOINT_ID
+  const response = await fetch(`https://api.runpod.ai/v2/${endpointId}/status/${jobId}`, {
+    signal: AbortSignal.timeout(10_000),
+    headers: {
+      Authorization: `Bearer ${env.RUNPOD_API_KEY}`
+    }
+  })
+  if (!response.ok) {
+    throw new Error(`Runpod status check failed: ${response.status} ${await response.text()}`)
+  }
+  return response.json() as Promise<RunpodJobStatus>
 }

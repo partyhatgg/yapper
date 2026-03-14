@@ -8,7 +8,7 @@ declare global {
       PORT?: string
       RUNPOD_ENDPOINT_ID: string
       RUNPOD_API_KEY: string
-      BASE_URL: string
+      CALLBACK_URL: string
       OTEL_EXPORTER_OTLP_ENDPOINT?: string
       GUILD_LOG_WEBHOOK_URL?: string
     }

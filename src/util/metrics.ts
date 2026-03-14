@@ -1,3 +1,4 @@
+import { env } from "node:process"
 import { metrics } from "@opentelemetry/api"
 import { OTLPMetricExporter } from "@opentelemetry/exporter-metrics-otlp-http"
 import { resourceFromAttributes } from "@opentelemetry/resources"
@@ -6,8 +7,8 @@ import { ATTR_SERVICE_NAME } from "@opentelemetry/semantic-conventions"
 
 const resource = resourceFromAttributes({ [ATTR_SERVICE_NAME]: "yapper" })
 
-if (process.env.OTEL_EXPORTER_OTLP_ENDPOINT) {
-  const exporter = new OTLPMetricExporter({ url: process.env.OTEL_EXPORTER_OTLP_ENDPOINT })
+if (env.OTEL_EXPORTER_OTLP_ENDPOINT) {
+  const exporter = new OTLPMetricExporter({ url: env.OTEL_EXPORTER_OTLP_ENDPOINT })
   const provider = new MeterProvider({
     resource,
     readers: [new PeriodicExportingMetricReader({ exporter, exportIntervalMillis: 60_000 })]

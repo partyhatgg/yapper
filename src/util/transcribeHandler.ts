@@ -1,8 +1,10 @@
 import type { MessageContextMenuCommandInteraction } from "discord.js"
-import { MessageFlags } from "discord.js"
+import { ButtonStyle, ComponentType, MessageFlags } from "discord.js"
 import { eq } from "drizzle-orm"
 import { db } from "@/db/index"
-import { ignoredUsers, transcriptions } from "@/db/schema"
+import { ignoredUsers, jobs, transcriptions } from "@/db/schema"
+import { logger } from "@/util/logger"
+import { resolveMessageSource } from "@/util/resolveMessageSource"
 import { queueTranscription } from "@/util/transcription"
 
 function messageUrl(guildId: string | null, channelId: string, messageId: string): string {
@@ -13,9 +15,19 @@ function messageUrl(guildId: string | null, channelId: string, messageId: string
 export async function handleTranscribeCommand(interaction: MessageContextMenuCommandInteraction, ephemeral: boolean) {
   const target = interaction.targetMessage
 
-  if (target.author.id !== interaction.user.id) {
+  const source = await resolveMessageSource(target, interaction.client)
+  if (!source) {
+    return interaction.reply({
+      content: "This message has no audio attachment to transcribe.",
+      flags: MessageFlags.Ephemeral
+    })
+  }
+
+  const { attachmentUrl, originalMessageId, originalAuthorId } = source
+
+  if (originalAuthorId && originalAuthorId !== interaction.user.id) {
     const ignored = await db.query.ignoredUsers.findFirst({
-      where: eq(ignoredUsers.userId, target.author.id)
+      where: eq(ignoredUsers.userId, originalAuthorId)
     })
     if (ignored) {
       return interaction.reply({
@@ -25,39 +37,33 @@ export async function handleTranscribeCommand(interaction: MessageContextMenuCom
     }
   }
 
-  const attachment = target.attachments.first()
-  if (!attachment) {
-    return interaction.reply({
-      content: "This message has no audio attachment to transcribe.",
-      flags: MessageFlags.Ephemeral
-    })
-  }
-
   if (!ephemeral) {
-    const existing = await db.query.transcriptions.findFirst({
-      where: eq(transcriptions.messageId, target.id)
-    })
+    const [existing, inProgress] = await Promise.all([db.query.transcriptions.findFirst({ where: eq(transcriptions.messageId, originalMessageId) }), db.query.jobs.findFirst({ where: eq(jobs.originalMessageId, originalMessageId) })])
+
+    if (inProgress) {
+      logger.info({ originalMessageId, jobId: inProgress.id }, "transcription already in progress")
+      return interaction.reply({
+        content: "This message is already being transcribed — the result will appear shortly.",
+        flags: MessageFlags.Ephemeral
+      })
+    }
+
     if (existing) {
-      // Point the user directly to the existing transcription.
-      // For thread transcriptions, link into the thread.
-      // For short transcriptions, link to the original voice message — the reply sits right below it.
-      const url = existing.threadId
-        ? messageUrl(interaction.guildId, existing.threadId, existing.threadId)
-        : messageUrl(interaction.guildId, interaction.channelId, target.id)
+      const url = existing.threadId ? messageUrl(interaction.guildId, existing.threadId, existing.threadId) : messageUrl(interaction.guildId, interaction.channelId, existing.replyMessageId ?? originalMessageId)
 
       return interaction.reply({
         flags: MessageFlags.Ephemeral | MessageFlags.IsComponentsV2,
         components: [
           {
-            type: 10, // Text Display
+            type: ComponentType.TextDisplay,
             content: "This message has already been transcribed."
           },
           {
-            type: 1, // Action Row
+            type: ComponentType.ActionRow,
             components: [
               {
-                type: 2, // Button
-                style: 5, // Link
+                type: ComponentType.Button,
+                style: ButtonStyle.Link,
                 label: existing.threadId ? "Jump to thread" : "Jump to transcription",
                 url
               }
@@ -71,16 +77,18 @@ export async function handleTranscribeCommand(interaction: MessageContextMenuCom
   await interaction.deferReply({ ...(ephemeral && { flags: MessageFlags.Ephemeral }) })
   const deferred = await interaction.fetchReply()
 
-  await queueTranscription(
-    {
-      attachmentUrl: attachment.url,
-      originalMessageId: target.id,
+  try {
+    await queueTranscription({
+      attachmentUrl,
+      originalMessageId,
       guildId: interaction.guildId,
       channelId: interaction.channelId,
       interactionToken: interaction.token,
       messageId: deferred.id,
       writeToDb: !ephemeral
-    },
-    db
-  )
+    })
+  } catch (err) {
+    logger.error({ err, originalMessageId }, "failed to queue transcription")
+    await interaction.editReply("Sorry, failed to start transcription.")
+  }
 }

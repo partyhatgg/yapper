@@ -1,13 +1,15 @@
 import { dirname, join } from "node:path"
+import { env } from "node:process"
 import { fileURLToPath } from "node:url"
 import { FrameworkClient, loadCommands, registerCommands } from "@hijuno/botkit"
-import { ApplicationCommandType, ApplicationIntegrationType, GatewayIntentBits, InteractionContextType, InteractionType } from "discord.js"
+import { ApplicationCommandType, ApplicationIntegrationType, GatewayIntentBits, InteractionContextType, InteractionType, Routes } from "discord.js"
 import { db } from "@/db/index"
 import { handleGuildCreate } from "@/events/guildCreate"
 import { handleGuildDelete } from "@/events/guildDelete"
 import { handleMessageCreate } from "@/events/messageCreate"
 import { rest } from "@/rest"
 import { createServer, startServer } from "@/server"
+import { startJobPoller } from "@/util/jobPoller"
 import { logger } from "@/util/logger"
 import { handleTranscribeCommand } from "@/util/transcribeHandler"
 import { queueTranscription } from "@/util/transcription"
@@ -23,11 +25,11 @@ const client = new FrameworkClient({
   logger
 })
 
-const port = Number(process.env.PORT ?? 3000)
-const app = createServer(db, rest, process.env.CLIENT_ID)
+const port = Number(env.PORT ?? 3000)
+const app = createServer()
 startServer(app, port)
 
-client.once("ready", async () => {
+client.once("clientReady", async () => {
   const { commandMap, builders } = await loadCommands(join(__dirname, "commands"), logger)
 
   // Append context menu commands to builders for registration
@@ -46,10 +48,13 @@ client.once("ready", async () => {
     }
   )
 
-  await registerCommands(process.env.TOKEN, process.env.CLIENT_ID, builders)
+  await registerCommands(env.TOKEN, env.CLIENT_ID, builders)
   client.setCommandMap(commandMap)
 
-  logger.info(`Ready as ${client.user?.tag}`)
+  startJobPoller()
+
+  const application = (await rest.get(Routes.currentApplication())) as { approximate_user_install_count?: number }
+  logger.info(`Ready as ${client.user?.tag} — ${client.guilds.cache.size} guilds, ${application.approximate_user_install_count ?? 0} user installs`)
 })
 
 // Handle context menu commands and button interactions manually
@@ -86,25 +91,22 @@ client.on("interactionCreate", async (interaction) => {
       return interaction.editReply("No audio attachment found on the original message.")
     }
 
-    await queueTranscription(
-      {
-        attachmentUrl: attachment.url,
-        originalMessageId,
-        guildId: interaction.guildId,
-        channelId,
-        interactionToken: interaction.token,
-        messageId: deferred.id,
-        writeToDb: true
-      },
-      db
-    )
+    await queueTranscription({
+      attachmentUrl: attachment.url,
+      originalMessageId,
+      guildId: interaction.guildId,
+      channelId,
+      interactionToken: interaction.token,
+      messageId: deferred.id,
+      writeToDb: true
+    })
   }
 })
 
-client.on("messageCreate", (message) => handleMessageCreate(message, db))
+client.on("messageCreate", handleMessageCreate)
 client.on("guildCreate", (guild) => handleGuildCreate(guild))
 client.on("guildDelete", (guild) => handleGuildDelete(guild))
 
-client.login(process.env.TOKEN)
+client.login(env.TOKEN)
 
 export { client as Bot }

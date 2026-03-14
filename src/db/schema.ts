@@ -17,6 +17,7 @@ export const transcriptions = pgTable("transcriptions", {
   messageId: text("message_id").primaryKey(),
   content: text("content").notNull(),
   threadId: text("thread_id"),
+  replyMessageId: text("reply_message_id"),
   createdAt: timestamp("created_at").notNull().defaultNow()
 })
 
@@ -30,3 +31,5 @@ export const ignoredUsers = pgTable("ignored_users", {
   userId: text("user_id").primaryKey(),
   createdAt: timestamp("created_at").notNull().defaultNow()
 })
+
+export type Job = typeof jobs.$inferSelect
