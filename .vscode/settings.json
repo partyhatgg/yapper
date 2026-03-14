@@ -1,0 +1,13 @@
+{
+  "js/ts.experimental.useTsgo": true,
+  "[plaintext]": {
+    "editor.wordWrap": "on"
+  },
+  "[json][javascript][typescript]": {
+    "editor.defaultFormatter": "biomejs.biome",
+    "editor.codeActionsOnSave": {
+      "source.organizeImports.biome": "explicit"
+    },
+    "editor.indentSize": 2
+  }
+}
