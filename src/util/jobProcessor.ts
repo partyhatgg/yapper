@@ -68,7 +68,7 @@ export async function processJobResult(job: Job, result: RunpodJobStatus): Promi
     return
   }
 
-  await db.insert(transcriptions).values({ messageId: job.originalMessageId, content: transcription, replyMessageId: job.messageId }).onConflictDoNothing()
+  await db.insert(transcriptions).values({ messageId: job.originalMessageId, replyMessageId: job.messageId }).onConflictDoNothing()
 
   if (transcription.length <= 2000) {
     await editReply(job, { content: transcription, allowed_mentions: { parse: [] } })

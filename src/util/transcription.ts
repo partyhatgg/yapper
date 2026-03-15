@@ -17,7 +17,7 @@ export interface QueueTranscriptionOptions {
   writeToDb: boolean
 }
 
-export async function queueTranscription(opts: QueueTranscriptionOptions): Promise<{ cached: true; content: string; threadId: string | null } | { cached: false }> {
+export async function queueTranscription(opts: QueueTranscriptionOptions): Promise<{ cached: true; threadId: string | null } | { cached: false }> {
   const { attachmentUrl, originalMessageId, guildId, channelId, interactionToken, messageId, writeToDb } = opts
 
   if (writeToDb) {
@@ -25,7 +25,7 @@ export async function queueTranscription(opts: QueueTranscriptionOptions): Promi
       where: eq(transcriptions.messageId, originalMessageId)
     })
     if (existing) {
-      return { cached: true, content: existing.content, threadId: existing.threadId ?? null }
+      return { cached: true, threadId: existing.threadId ?? null }
     }
 
     const inProgress = await db.query.jobs.findFirst({
