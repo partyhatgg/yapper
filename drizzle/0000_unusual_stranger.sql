@@ -1,15 +1,15 @@
-CREATE TABLE "auto_transcript_voice_messages" (
+CREATE TABLE IF NOT EXISTS "auto_transcript_voice_messages" (
 	"guild_id" text PRIMARY KEY NOT NULL,
 	"enabled" boolean DEFAULT true NOT NULL,
 	"created_at" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "ignored_users" (
+CREATE TABLE IF NOT EXISTS "ignored_users" (
 	"user_id" text PRIMARY KEY NOT NULL,
 	"created_at" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "jobs" (
+CREATE TABLE IF NOT EXISTS "jobs" (
 	"id" text PRIMARY KEY NOT NULL,
 	"model" text NOT NULL,
 	"attachment_url" text NOT NULL,
@@ -22,7 +22,7 @@ CREATE TABLE "jobs" (
 	"created_at" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "transcriptions" (
+CREATE TABLE IF NOT EXISTS "transcriptions" (
 	"message_id" text PRIMARY KEY NOT NULL,
 	"content" text NOT NULL,
 	"thread_id" text,
