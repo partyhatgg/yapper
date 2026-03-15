@@ -29,7 +29,7 @@ export async function handleTranscribeCommand(interaction: MessageContextMenuCom
     const ignored = await db.query.ignoredUsers.findFirst({
       where: eq(ignoredUsers.userId, originalAuthorId)
     })
-    if (ignored) {
+    if (ignored && (ignored.type === "context_menu" || ignored.type === "all")) {
       return interaction.reply({
         content: "This user has opted out of transcription.",
         flags: MessageFlags.Ephemeral

@@ -1,4 +1,6 @@
-import { boolean, pgTable, text, timestamp } from "drizzle-orm/pg-core"
+import { boolean, pgEnum, pgTable, text, timestamp } from "drizzle-orm/pg-core"
+
+export const ignoreType = pgEnum("ignore_type", ["context_menu", "auto_transcription", "all"])
 
 export const jobs = pgTable("jobs", {
   id: text("id").primaryKey(),
@@ -28,6 +30,7 @@ export const autoTranscriptVoiceMessages = pgTable("auto_transcript_voice_messag
 
 export const ignoredUsers = pgTable("ignored_users", {
   userId: text("user_id").primaryKey(),
+  type: ignoreType("type").notNull(),
   createdAt: timestamp("created_at").notNull().defaultNow()
 })
 
