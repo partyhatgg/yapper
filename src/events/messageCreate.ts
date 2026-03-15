@@ -30,7 +30,7 @@ export async function handleMessageCreate(message: Message) {
   ])
 
   if (!setting?.enabled) return
-  if (ignored && (ignored.type === "auto_transcription" || ignored.type === "all")) return
+  if (ignored && (ignored.type === "AUTO_TRANSCRIPTION" || ignored.type === "ALL")) return
 
   let reply: Message
   try {

@@ -13,12 +13,12 @@ export default {
     const userId = interaction.user.id
     const existing = await db.query.ignoredUsers.findFirst({ where: eq(ignoredUsers.userId, userId) })
 
-    if (existing?.type === "context_menu") {
+    if (existing?.type === "CONTEXT_MENU") {
       await db.delete(ignoredUsers).where(eq(ignoredUsers.userId, userId))
       return interaction.reply({ content: "Context menu transcription by others is now **allowed**.", flags: MessageFlags.Ephemeral })
     }
 
-    await db.insert(ignoredUsers).values({ userId, type: "context_menu" }).onConflictDoUpdate({ target: ignoredUsers.userId, set: { type: "context_menu" } })
+    await db.insert(ignoredUsers).values({ userId, type: "CONTEXT_MENU" }).onConflictDoUpdate({ target: ignoredUsers.userId, set: { type: "CONTEXT_MENU" } })
     return interaction.reply({ content: "Others can no longer transcribe your messages via context menu.", flags: MessageFlags.Ephemeral })
   }
 } satisfies Subcommand

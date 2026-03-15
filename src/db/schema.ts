@@ -1,6 +1,6 @@
 import { boolean, pgEnum, pgTable, text, timestamp } from "drizzle-orm/pg-core"
 
-export const ignoreType = pgEnum("ignore_type", ["context_menu", "auto_transcription", "all"])
+export const ignoreType = pgEnum("ignore_type", ["CONTEXT_MENU", "AUTO_TRANSCRIPTION", "ALL"])
 
 export const jobs = pgTable("jobs", {
   id: text("id").primaryKey(),
