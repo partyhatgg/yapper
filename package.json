@@ -4,7 +4,7 @@
   "type": "module",
   "main": "dist/src/index.js",
   "license": "MIT",
-  "packageManager": "pnpm@10.32.1+sha512.a706938f0e89ac1456b6563eab4edf1d1faf3368d1191fc5c59790e96dc918e4456ab2e67d613de1043d2e8c81f87303e6b40d4ffeca9df15ef1ad567348f2be",
+  "packageManager": "pnpm@10.33.0",
   "scripts": {
     "build": "tsc",
     "dev": "tsx --watch src/index.ts",
@@ -13,17 +13,17 @@
   },
   "dependencies": {
     "@hijuno/botkit": "jsr:^1.0.1",
-    "@hono/node-server": "^1.19.9",
-    "@opentelemetry/api": "^1.9.0",
-    "@opentelemetry/exporter-metrics-otlp-http": "^0.212.0",
-    "@opentelemetry/resources": "^2.5.1",
-    "@opentelemetry/sdk-metrics": "^2.5.1",
+    "@hono/node-server": "^1.19.13",
+    "@opentelemetry/api": "^1.9.1",
+    "@opentelemetry/exporter-metrics-otlp-http": "^0.214.0",
+    "@opentelemetry/resources": "^2.6.1",
+    "@opentelemetry/sdk-metrics": "^2.6.1",
     "@opentelemetry/semantic-conventions": "^1.40.0",
     "@paralleldrive/cuid2": "^3.3.0",
     "bufferutil": "^4.1.0",
-    "discord.js": "^14.25.1",
-    "drizzle-orm": "^0.45.1",
-    "hono": "^4.12.3",
+    "discord.js": "^14.26.2",
+    "drizzle-orm": "^0.45.2",
+    "hono": "^4.12.12",
     "node-cron": "^4.2.1",
     "pino": "^10.3.1",
     "pino-colada": "^2.2.2",
@@ -33,11 +33,11 @@
     "zlib-sync": "^0.1.10"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.4.4",
-    "@types/node": "^25.3.2",
-    "@types/pg": "^8.16.0",
-    "drizzle-kit": "^0.31.9",
-    "pg": "^8.19.0",
-    "typescript": "^5.9.3"
+    "@biomejs/biome": "2.4.11",
+    "@types/node": "^25.6.0",
+    "@types/pg": "^8.20.0",
+    "drizzle-kit": "^0.31.10",
+    "pg": "^8.20.0",
+    "typescript": "^6.0.2"
   }
 }
