@@ -1,6 +1,9 @@
-import { env } from "node:process"
+import { env, loadEnvFile } from "node:process"
 import type { Config } from "drizzle-kit"
-import "./src/env.js"
+
+try {
+  loadEnvFile(env.NODE_ENV === "production" ? ".env.prod" : ".env")
+} catch {}
 if (env.DATABASE_URL === undefined) {
   throw new Error("DATABASE_URL is not defined")
 }
