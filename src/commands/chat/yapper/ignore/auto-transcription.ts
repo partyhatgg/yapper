@@ -5,9 +5,7 @@ import { db } from "@/db/index"
 import { ignoredUsers } from "@/db/schema"
 
 export default {
-  data: new SlashCommandSubcommandBuilder()
-    .setName("auto_transcription")
-    .setDescription("Prevent your voice messages from being auto-transcribed in servers"),
+  data: new SlashCommandSubcommandBuilder().setName("auto_transcription").setDescription("Prevent your voice messages from being auto-transcribed in servers"),
 
   async execute(interaction) {
     const userId = interaction.user.id
@@ -18,7 +16,10 @@ export default {
       return interaction.reply({ content: "Auto-transcription of your voice messages is now **enabled**.", flags: MessageFlags.Ephemeral })
     }
 
-    await db.insert(ignoredUsers).values({ userId, type: "AUTO_TRANSCRIPTION" }).onConflictDoUpdate({ target: ignoredUsers.userId, set: { type: "AUTO_TRANSCRIPTION" } })
+    await db
+      .insert(ignoredUsers)
+      .values({ userId, type: "AUTO_TRANSCRIPTION" })
+      .onConflictDoUpdate({ target: ignoredUsers.userId, set: { type: "AUTO_TRANSCRIPTION" } })
     return interaction.reply({ content: "Your voice messages will no longer be auto-transcribed.", flags: MessageFlags.Ephemeral })
   }
 } satisfies Subcommand

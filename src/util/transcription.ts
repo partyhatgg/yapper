@@ -1,9 +1,9 @@
 import { env } from "node:process"
 import { Routes } from "discord.js"
 import { eq } from "drizzle-orm"
+import { client } from "@/client"
 import { db } from "@/db/index"
 import { type Job, jobs, transcriptions } from "@/db/schema"
-import { rest } from "@/rest"
 import { logger } from "@/util/logger"
 import { submitRunpodJob } from "@/util/runpod"
 
@@ -57,8 +57,8 @@ export async function queueTranscription(opts: QueueTranscriptionOptions): Promi
 
 export async function editReply(job: Job, body: Record<string, unknown>) {
   if (job.interactionToken) {
-    await rest.patch(Routes.webhookMessage(env.CLIENT_ID, job.interactionToken), { body })
+    await client.rest.patch(Routes.webhookMessage(env.CLIENT_ID, job.interactionToken), { body })
   } else {
-    await rest.patch(Routes.channelMessage(job.channelId, job.messageId), { body })
+    await client.rest.patch(Routes.channelMessage(job.channelId, job.messageId), { body })
   }
 }

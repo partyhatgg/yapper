@@ -1,9 +1,9 @@
 import { env } from "node:process"
 import { ButtonStyle, ChannelType, ComponentType, Routes } from "discord.js"
 import { eq } from "drizzle-orm"
+import { client } from "@/client"
 import { db } from "@/db/index"
 import { type Job, jobs, transcriptions } from "@/db/schema"
-import { rest } from "@/rest"
 import { logger } from "@/util/logger"
 import { transcriptionsDurationMs, transcriptionsErrors, transcriptionsTotal } from "@/util/metrics"
 import type { RunpodJobStatus } from "@/util/runpod"
@@ -80,21 +80,35 @@ export async function processJobResult(job: Job, result: RunpodJobStatus): Promi
     return
   }
 
-  const channel = (await rest.get(Routes.channel(job.channelId))) as { type: ChannelType }
-  if (THREADABLE_CHANNEL_TYPES.has(channel.type)) {
-    await createThreadReply(job, transcription)
+  let channelType: ChannelType | undefined
+  try {
+    const channel = (await client.rest.get(Routes.channel(job.channelId))) as { type: ChannelType }
+    channelType = channel.type
+  } catch (err) {
+    logger.warn({ err, jobId: job.id, channelId: job.channelId }, "failed to fetch channel type, falling back to file reply")
+  }
+
+  if (channelType !== undefined && THREADABLE_CHANNEL_TYPES.has(channelType)) {
+    const threaded = await createThreadReply(job, transcription)
+    if (!threaded) await sendFileReply(job, transcription)
   } else {
     await sendFileReply(job, transcription)
   }
 }
 
-async function createThreadReply(job: Job, transcription: string) {
-  const thread = (await rest.post(Routes.threads(job.channelId, job.messageId), {
-    body: { name: "Transcription", auto_archive_duration: 1440 }
-  })) as { id: string }
+async function createThreadReply(job: Job, transcription: string): Promise<boolean> {
+  let thread: { id: string }
+  try {
+    thread = (await client.rest.post(Routes.threads(job.channelId, job.messageId), {
+      body: { name: "Transcription", auto_archive_duration: 1440 }
+    })) as { id: string }
+  } catch (err) {
+    logger.warn({ err, jobId: job.id }, "failed to create transcription thread")
+    return false
+  }
 
   for (const chunk of chunkText(transcription)) {
-    await rest.post(Routes.channelMessages(thread.id), {
+    await client.rest.post(Routes.channelMessages(thread.id), {
       body: { content: chunk, allowed_mentions: { parse: [] } }
     })
   }
@@ -104,13 +118,14 @@ async function createThreadReply(job: Job, transcription: string) {
   const threadLink = `https://discord.com/channels/${job.guildId}/${thread.id}`
   await editReply(job, { content: `:thread: Done - ${threadLink}`, allowed_mentions: { parse: [] } })
 
-  await rest.patch(Routes.channel(thread.id), { body: { locked: true, archived: true } })
+  await client.rest.patch(Routes.channel(thread.id), { body: { locked: true, archived: true } })
+  return true
 }
 
 async function sendFileReply(job: Job, transcription: string) {
   const preview = transcription.slice(0, 500)
   const route = job.interactionToken ? Routes.webhookMessage(env.CLIENT_ID, job.interactionToken) : Routes.channelMessage(job.channelId, job.messageId)
-  await rest.patch(route, {
+  await client.rest.patch(route, {
     body: {
       content: preview.length < transcription.length ? `${preview}...\n*(full transcription attached)*` : preview,
       allowed_mentions: { parse: [] }

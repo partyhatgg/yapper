@@ -1,5 +1,5 @@
 import type { MessageContextMenuCommandInteraction } from "discord.js"
-import { ButtonStyle, ComponentType, MessageFlags } from "discord.js"
+import { MessageFlags } from "discord.js"
 import { eq } from "drizzle-orm"
 import { db } from "@/db/index"
 import { ignoredUsers, jobs, transcriptions } from "@/db/schema"
@@ -13,14 +13,13 @@ function messageUrl(guildId: string | null, channelId: string, messageId: string
 }
 
 export async function handleTranscribeCommand(interaction: MessageContextMenuCommandInteraction, ephemeral: boolean) {
-  const target = interaction.targetMessage
+  await interaction.deferReply({ ...(ephemeral && { flags: MessageFlags.Ephemeral }) })
 
+  const target = interaction.targetMessage
   const source = await resolveMessageSource(target, interaction.client)
   if (!source) {
-    return interaction.reply({
-      content: "This message has no audio attachment to transcribe.",
-      flags: MessageFlags.Ephemeral
-    })
+    await interaction.editReply("This message has no audio attachment to transcribe.")
+    return
   }
 
   const { attachmentUrl, originalMessageId, originalAuthorId } = source
@@ -30,10 +29,8 @@ export async function handleTranscribeCommand(interaction: MessageContextMenuCom
       where: eq(ignoredUsers.userId, originalAuthorId)
     })
     if (ignored && (ignored.type === "CONTEXT_MENU" || ignored.type === "ALL")) {
-      return interaction.reply({
-        content: "This user has opted out of transcription.",
-        flags: MessageFlags.Ephemeral
-      })
+      await interaction.editReply("This user has opted out of transcription.")
+      return
     }
   }
 
@@ -42,39 +39,17 @@ export async function handleTranscribeCommand(interaction: MessageContextMenuCom
 
     if (inProgress) {
       logger.info({ originalMessageId, jobId: inProgress.id }, "transcription already in progress")
-      return interaction.reply({
-        content: "This message is already being transcribed — the result will appear shortly.",
-        flags: MessageFlags.Ephemeral
-      })
+      await interaction.editReply("This message is already being transcribed — the result will appear shortly.")
+      return
     }
 
     if (existing) {
       const url = existing.threadId ? messageUrl(interaction.guildId, existing.threadId, existing.threadId) : messageUrl(interaction.guildId, interaction.channelId, existing.replyMessageId ?? originalMessageId)
-
-      return interaction.reply({
-        flags: MessageFlags.Ephemeral | MessageFlags.IsComponentsV2,
-        components: [
-          {
-            type: ComponentType.TextDisplay,
-            content: "This message has already been transcribed."
-          },
-          {
-            type: ComponentType.ActionRow,
-            components: [
-              {
-                type: ComponentType.Button,
-                style: ButtonStyle.Link,
-                label: existing.threadId ? "Jump to thread" : "Jump to transcription",
-                url
-              }
-            ]
-          }
-        ]
-      } as any)
+      await interaction.editReply(`This message has already been transcribed: ${url}`)
+      return
     }
   }
 
-  await interaction.deferReply({ ...(ephemeral && { flags: MessageFlags.Ephemeral }) })
   const deferred = await interaction.fetchReply()
 
   try {
