@@ -57,7 +57,8 @@ export async function queueTranscription(opts: QueueTranscriptionOptions): Promi
 
 export async function editReply(job: Job, body: Record<string, unknown>) {
   if (job.interactionToken) {
-    await client.rest.patch(Routes.webhookMessage(env.CLIENT_ID, job.interactionToken), { body })
+    // auth: false — a 401 here would make @discordjs/rest null the bot token globally.
+    await client.rest.patch(Routes.webhookMessage(env.CLIENT_ID, job.interactionToken), { body, auth: false })
   } else {
     await client.rest.patch(Routes.channelMessage(job.channelId, job.messageId), { body })
   }

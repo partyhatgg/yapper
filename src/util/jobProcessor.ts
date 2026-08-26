@@ -34,6 +34,12 @@ function chunkText(text: string, size = 1990): string[] {
 }
 
 export async function processJobResult(job: Job, result: RunpodJobStatus): Promise<void> {
+  // Skip if gateway/REST not ready — leaves job in DB for the poller to retry.
+  if (!client.isReady()) {
+    logger.warn({ jobId: job.id }, "client not ready, deferring job result to next poll")
+    return
+  }
+
   // RETURNING ensures idempotency — webhook and poller can race without double-processing
   const deleted = await db.delete(jobs).where(eq(jobs.id, job.id)).returning({ id: jobs.id })
   if (deleted.length === 0) {
@@ -130,6 +136,8 @@ async function sendFileReply(job: Job, transcription: string) {
       content: preview.length < transcription.length ? `${preview}...\n*(full transcription attached)*` : preview,
       allowed_mentions: { parse: [] }
     },
-    files: [{ name: "transcription.txt", data: Buffer.from(transcription), contentType: "text/plain" }]
+    files: [{ name: "transcription.txt", data: Buffer.from(transcription), contentType: "text/plain" }],
+    // auth: false on interaction webhook route — a 401 would make @discordjs/rest null the bot token globally.
+    auth: job.interactionToken ? false : undefined
   })
 }

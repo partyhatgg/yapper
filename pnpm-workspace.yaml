@@ -4,3 +4,5 @@ allowBuilds:
   protobufjs: true
   utf-8-validate: true
   zlib-sync: true
+minimumReleaseAgeExclude:
+  - hono@4.13.5
