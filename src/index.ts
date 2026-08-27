@@ -2,7 +2,7 @@ import { dirname, join } from "node:path"
 import { env } from "node:process"
 import { fileURLToPath } from "node:url"
 import { loadCommands, registerCommands } from "@hijuno/botkit"
-import { ApplicationCommandType, ApplicationIntegrationType, InteractionContextType, InteractionType, type Message, Routes } from "discord.js"
+import { ApplicationCommandType, ApplicationIntegrationType, type Interaction, InteractionContextType, InteractionType, type Message, Routes } from "discord.js"
 import { client } from "@/client"
 import { db } from "@/db/index"
 import { handleGuildCreate } from "@/events/guildCreate"
@@ -10,6 +10,7 @@ import { handleGuildDelete } from "@/events/guildDelete"
 import { handleMessageCreate } from "@/events/messageCreate"
 import { createServer, startServer } from "@/server"
 import { startJobPoller } from "@/util/jobPoller"
+import { logger } from "@/util/logger"
 import { handleTranscribeCommand } from "@/util/transcribeHandler"
 import { queueTranscription } from "@/util/transcription"
 
@@ -50,7 +51,7 @@ client.once("clientReady", async () => {
 })
 
 // Handle context menu commands and button interactions manually
-client.on("interactionCreate", async (interaction) => {
+async function handleInteractionCreate(interaction: Interaction) {
   // Message context menus
   if (interaction.type === InteractionType.ApplicationCommand && interaction.isMessageContextMenuCommand()) {
     if (interaction.commandName === "Transcribe") {
@@ -99,9 +100,11 @@ client.on("interactionCreate", async (interaction) => {
       writeToDb: true
     })
   }
-})
+}
 
-client.on("messageCreate", handleMessageCreate)
+// discord.js does not await listeners — a rejected await inside one is an unhandled rejection and kills the process on Node 24.
+client.on("interactionCreate", (interaction) => handleInteractionCreate(interaction).catch((err) => logger.error({ err }, "interactionCreate handler failed")))
+client.on("messageCreate", (message) => handleMessageCreate(message).catch((err) => logger.error({ err, messageId: message.id }, "messageCreate handler failed")))
 client.on("guildCreate", (guild) => handleGuildCreate(guild))
 client.on("guildDelete", (guild) => handleGuildDelete(guild))
 

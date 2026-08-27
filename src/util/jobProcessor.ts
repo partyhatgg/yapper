@@ -49,18 +49,24 @@ export async function processJobResult(job: Job, result: RunpodJobStatus): Promi
 
   if (result.status !== "COMPLETED" || !result.output?.transcription) {
     logger.warn({ jobId: job.id, status: result.status, error: result.error }, "transcription job failed")
-    transcriptionsErrors.add(1, { reason: result.error ?? result.status })
-    await editReply(job, {
-      content: "Sorry, transcription failed.",
-      allowed_mentions: { parse: [] },
-      components: [retryButton(job.channelId, job.originalMessageId)]
-    })
+    await postTranscriptionFailure(job, result.error ?? result.status)
     return
   }
 
-  const { transcription } = result.output
   const durationMs = (result.delayTime ?? 0) + (result.executionTime ?? 0)
+  await postTranscription(job, result.output.transcription, durationMs)
+}
 
+export async function postTranscriptionFailure(job: Job, reason: string): Promise<void> {
+  transcriptionsErrors.add(1, { reason })
+  await editReply(job, {
+    content: "Sorry, transcription failed.",
+    allowed_mentions: { parse: [] },
+    components: [retryButton(job.channelId, job.originalMessageId)]
+  })
+}
+
+export async function postTranscription(job: Job, transcription: string, durationMs: number): Promise<void> {
   transcriptionsTotal.add(1, {
     guild_id: job.guildId ?? "dm",
     trigger: job.interactionToken ? (job.writeToDb ? "context-menu" : "private") : "auto"
